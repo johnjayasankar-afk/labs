@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#09080c" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="John Jayasankar" />
+    <title>Labs · John Jayasankar</title>
+    <meta
+      name="description"
+      content="Independent products John Jayasankar shipped: RideLens, Daylight, RailDrop, and other instruments."
+    />
+    <link rel="canonical" href="/" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:site_name" content="John Jayasankar · Labs" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Labs · John Jayasankar" />
+    <meta property="og:description" content="Independent products, shipped." />
+    <meta property="og:url" content="/" />
+    <meta property="og:image" content="/og.jpg" />
+    <meta property="og:image:alt" content="Labs · John Jayasankar — independent products, shipped" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="627" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Labs · John Jayasankar" />
+    <meta name="twitter:description" content="Independent products, shipped." />
+    <meta name="twitter:image" content="/og.jpg" />
+    <link rel="preload" href="/fonts/schibsted-grotesk-latin-500.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/ibm-plex-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/styles.css" />
+    <script>
+      (function () {
+        var origin = location.origin;
+        var url = origin + "/";
+        var image = origin + "/og.jpg";
+        var pairs = [
+          ['link[rel="canonical"]', "href", url],
+          ['meta[property="og:url"]', "content", url],
+          ['meta[property="og:image"]', "content", image],
+          ['meta[name="twitter:image"]', "content", image],
+        ];
+        for (var i = 0; i < pairs.length; i++) {
+          var el = document.querySelector(pairs[i][0]);
+          if (el) el.setAttribute(pairs[i][1], pairs[i][2]);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#featured">Skip to builds</a>
+
+    <div class="atmosphere" aria-hidden="true">
+      <div class="grid"></div>
+      <div class="bloom"></div>
+      <div class="grain"></div>
+    </div>
+    <div class="frame" aria-hidden="true"></div>
+
+    <header class="top">
+      <a class="brand" href="/" aria-label="Labs home">
+        <span class="brand-mark">JJ</span>
+        <span class="brand-name">Jayasankar</span>
+        <span class="brand-lab">Labs</span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="#featured">Builds</a>
+        <a href="#also">Also</a>
+        <a href="https://johnjayasankar.com/">Portfolio</a>
+        <a href="https://substack.com/@johnjayasankar">Writing</a>
+      </nav>
+      <p class="clock" data-clock aria-live="off">NY · --:--</p>
+      <button class="kcmd" type="button" data-open-cmd aria-haspopup="dialog" aria-controls="cmd">
+        <span>Jump</span>
+        <kbd>⌘K</kbd>
+      </button>
+    </header>
+    <p class="rail" aria-hidden="true">
+      <span>JJ-LABS-01</span>
+      <span>Independent · offline-capable</span>
+      <span class="live"><i></i>Systems live</span>
+      <span data-clock>NY · --:--</span>
+    </p>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Independent products · 2026</p>
+          <h1 id="hero-title">Instruments I shipped.</h1>
+          <span class="title-rule" aria-hidden="true"></span>
+          <p class="lede">
+            Consumer tools, pricing engines, and a model for when a workflow should get an agent.
+            Built end-to-end. No demos.
+          </p>
+          <p class="hero-meta">
+            <span class="live"><i></i>07 live</span>
+            <span>03 featured</span>
+            <span>New York</span>
+          </p>
+        </div>
+        <aside class="hud" aria-hidden="true">
+          <p class="hud-kicker">Range · one bench</p>
+          <div class="hud-mods">
+            <div class="hud-mod">
+              <svg viewBox="0 0 64 40" fill="none">
+                <rect x="6" y="22" width="10" height="12" rx="1.5" />
+                <rect x="20" y="16" width="10" height="18" rx="1.5" />
+                <rect x="34" y="10" width="10" height="24" rx="1.5" />
+                <rect class="on" x="48" y="6" width="10" height="28" rx="1.5" />
+              </svg>
+              <span>01 Consumer</span>
+            </div>
+            <span class="hud-arrow">→</span>
+            <div class="hud-mod">
+              <svg viewBox="0 0 64 40" fill="none">
+                <path d="M8 32 C 18 8, 46 8, 56 32" />
+                <circle class="on" cx="22" cy="16" r="3" />
+              </svg>
+              <span>02 Native</span>
+            </div>
+            <span class="hud-arrow">→</span>
+            <div class="hud-mod">
+              <svg viewBox="0 0 64 40" fill="none">
+                <circle cx="32" cy="20" r="4" />
+                <circle cx="14" cy="12" r="2.5" />
+                <circle cx="50" cy="12" r="2.5" />
+                <circle class="on" cx="18" cy="30" r="2.5" />
+                <circle cx="46" cy="30" r="2.5" />
+                <path d="M32 20 L14 12 M32 20 L50 12 M32 20 L18 30 M32 20 L46 30" />
+              </svg>
+              <span>03 Model</span>
+            </div>
+          </div>
+          <p class="hud-foot">RideLens · Daylight · AgentFit</p>
+        </aside>
+      </section>
+
+      <section class="section" id="featured" aria-labelledby="featured-title">
+        <header class="section-head">
+          <p class="eyebrow">Featured · 01–03</p>
+          <h2 id="featured-title">Three systems that show the range.</h2>
+        </header>
+
+        <ol class="featured">
+          <li>
+            <a class="feature" href="/ridelens" data-item data-name="RideLens">
+              <span class="feature-ghost" aria-hidden="true">01</span>
+              <div class="feature-viz" aria-hidden="true">
+                <span class="viz-ticks"></span>
+                <svg viewBox="0 0 280 176" fill="none">
+                  <text class="viz-kicker" x="16" y="26">TONIGHT · FOUR PROVIDERS</text>
+                  <line x1="20" y1="132" x2="260" y2="132" />
+                  <rect x="28" y="96" width="40" height="36" rx="3" />
+                  <rect x="84" y="78" width="40" height="54" rx="3" />
+                  <rect x="140" y="60" width="40" height="72" rx="3" />
+                  <rect class="viz-live" x="196" y="44" width="40" height="88" rx="3" />
+                  <text class="viz-label" x="28" y="154">UBER</text>
+                  <text class="viz-label" x="84" y="154">LYFT</text>
+                  <text class="viz-label" x="140" y="154">EMP</text>
+                  <text class="viz-label viz-live-t" x="196" y="154">CURB</text>
+                </svg>
+              </div>
+              <div class="feature-body">
+                <p class="feature-id">01 / Consumer</p>
+                <h3>RideLens</h3>
+                <p class="feature-line">Every ride, one comparison.</p>
+                <p class="feature-copy">
+                  Live roads. Real rate cards. Uber, Lyft, Empower, and Curb ranked before you open four apps
+                  and guess.
+                </p>
+                <p class="feature-go">Open RideLens <span aria-hidden="true">→</span></p>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a class="feature" href="/daylight" data-item data-name="Daylight">
+              <span class="feature-ghost" aria-hidden="true">02</span>
+              <div class="feature-viz" aria-hidden="true">
+                <span class="viz-ticks"></span>
+                <svg viewBox="0 0 280 176" fill="none">
+                  <defs>
+                    <linearGradient id="warm" x1="36" y1="0" x2="244" y2="0">
+                      <stop stop-color="#f1ece4" />
+                      <stop offset="1" stop-color="#9ecedc" />
+                    </linearGradient>
+                  </defs>
+                  <text class="viz-kicker" x="16" y="26">SCHEDULE · OFFLINE</text>
+                  <path class="viz-arc" d="M36 128 C 78 40, 202 40, 244 128" stroke="url(#warm)" />
+                  <circle class="viz-sun" cx="92" cy="66" r="6" />
+                  <circle class="viz-sun viz-sun-2" cx="176" cy="58" r="4.5" />
+                  <line x1="36" y1="128" x2="244" y2="128" />
+                  <text class="viz-label" x="36" y="154">DAWN</text>
+                  <text class="viz-label viz-live-t" x="204" y="154">DUSK</text>
+                </svg>
+              </div>
+              <div class="feature-body">
+                <p class="feature-id">02 / Native</p>
+                <h3>Daylight</h3>
+                <p class="feature-line">Your screen, through the day.</p>
+                <p class="feature-copy">
+                  Warmth and brightness on a schedule you set — gradual, offline, and honest about what it is
+                  doing and why.
+                </p>
+                <p class="feature-go">Open Daylight <span aria-hidden="true">→</span></p>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a class="feature" href="/raildrop" data-item data-name="RailDrop">
+              <span class="feature-ghost" aria-hidden="true">03</span>
+              <div class="feature-viz" aria-hidden="true">
+                <span class="viz-ticks"></span>
+                <svg viewBox="0 0 280 176" fill="none">
+                  <text class="viz-kicker" x="16" y="26">WATCH · AMTRAK BOARD</text>
+                  <polyline class="viz-ghost" points="28,56 80,60 124,58 168,74 210,70 252,88" />
+                  <polyline class="viz-line" points="28,56 80,60 124,58 168,90 210,86 252,128" />
+                  <circle class="viz-sun" cx="252" cy="128" r="4.5" />
+                  <text class="viz-label" x="28" y="154">PAID $128</text>
+                  <text class="viz-label viz-live-t" x="188" y="154">LISTED $47</text>
+                </svg>
+              </div>
+              <div class="feature-body">
+                <p class="feature-id">03 / Consumer</p>
+                <h3>RailDrop</h3>
+                <p class="feature-line">Know when your train gets cheaper.</p>
+                <p class="feature-copy">
+                  Book the trip. Watch every bookable Amtrak option across your window. One email when a
+                  listed fare actually drops.
+                </p>
+                <p class="feature-go">Open RailDrop <span aria-hidden="true">→</span></p>
+              </div>
+            </a>
+          </li>
+        </ol>
+      </section>
+
+      <section class="section" id="also" aria-labelledby="also-title">
+        <header class="section-head">
+          <p class="eyebrow">Also shipped · 04–07</p>
+          <h2 id="also-title">Narrower instruments. Same bar.</h2>
+        </header>
+
+        <ol class="also">
+          <li>
+            <a class="row" href="/agentfit" data-item data-name="AgentFit">
+              <span class="row-id">04</span>
+              <span class="row-name">AgentFit</span>
+              <span class="row-line">When should a workflow get an agent?</span>
+              <span class="row-tag">Decision model</span>
+              <span class="row-go" aria-hidden="true">→</span>
+            </a>
+          </li>
+          <li>
+            <a class="row" href="/cartonry" data-item data-name="Cartonry">
+              <span class="row-id">05</span>
+              <span class="row-name">Cartonry</span>
+              <span class="row-line">Packaging dielines — cut, crease, fold, cost.</span>
+              <span class="row-tag">Tool</span>
+              <span class="row-go" aria-hidden="true">→</span>
+            </a>
+          </li>
+          <li>
+            <a class="row" href="/keepfloor" data-item data-name="KeepFloor">
+              <span class="row-id">06</span>
+              <span class="row-name">KeepFloor</span>
+              <span class="row-line">The Etsy list price that still pays you.</span>
+              <span class="row-tag">Pricing</span>
+              <span class="row-go" aria-hidden="true">→</span>
+            </a>
+          </li>
+          <li>
+            <a class="row" href="/pricing" data-item data-name="Pricing Hub">
+              <span class="row-id">07</span>
+              <span class="row-name">Pricing Hub</span>
+              <span class="row-line">Contractor job costing, estimate to invoice.</span>
+              <span class="row-tag">Workbook</span>
+              <span class="row-go" aria-hidden="true">→</span>
+            </a>
+          </li>
+        </ol>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <div class="foot-left">
+        <p class="foot-brand">John Jayasankar · Labs</p>
+        <p class="foot-note">Independent products. Separate from the portfolio.</p>
+      </div>
+      <nav class="foot-nav" aria-label="Elsewhere">
+        <a href="https://johnjayasankar.com/">Portfolio</a>
+        <a href="https://substack.com/@johnjayasankar">Writing</a>
+        <a href="mailto:johnjayasankar@gmail.com">Email</a>
+      </nav>
+        <p class="foot-keys">j / k builds · Enter open · ⌘K jump · ? keys · <span data-clock>NY · --:--</span></p>
+    </footer>
+
+    <dialog class="cmd" id="cmd" aria-label="Jump to a build">
+      <form method="dialog" class="cmd-form">
+        <label class="cmd-label" for="cmd-q">Jump</label>
+        <input id="cmd-q" class="cmd-q" type="search" placeholder="RideLens, Daylight, AgentFit…" autocomplete="off" />
+      </form>
+      <ul class="cmd-list" id="cmd-list"></ul>
+    </dialog>
+
+    <div class="help" id="help" hidden>
+      <div class="help-card" role="dialog" aria-labelledby="help-title">
+        <p class="eyebrow" id="help-title">Keys</p>
+        <ul>
+          <li><kbd>j</kbd> <kbd>k</kbd> move</li>
+          <li><kbd>Enter</kbd> open</li>
+          <li><kbd>⌘K</kbd> jump</li>
+          <li><kbd>g</kbd> <kbd>g</kbd> top</li>
+          <li><kbd>?</kbd> this list</li>
+          <li><kbd>Esc</kbd> close</li>
+        </ul>
+        <button type="button" data-close-help>Close</button>
+      </div>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
