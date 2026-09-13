@@ -98,7 +98,7 @@ body { width: 1200px; height: 630px; }
     <p class="og__head"><span>Range · one bench</span><span>07 live</span></p>
     {{body}}
   </div>
-  <p class="og__dom">labs-rouge.vercel.app</p>
+  <p class="og__dom">{{domain}}</p>
 </div>
 </body>
 </html>
@@ -118,7 +118,7 @@ def main():
                          for label, w, ar in FRAMES)
         secs.append('<section class="lab-sec" data-lab="%s"><h2 class="lab-h">%s</h2><div class="lab-row">%s</div></section>' % (key, key, frames))
     write('_stories.html', LAB.replace('{{body}}', '\n'.join(secs)))
-    write('_og.html', OG.replace('{{body}}', stories.render('ridelens')))
+    write('_og.html', OG.replace('{{body}}', stories.render('ridelens')).replace('{{domain}}', D.SITE['domain'].split('://', 1)[-1]))
     print('wrote _stories.html and _og.html for %d stories' % len(keys))
 
 

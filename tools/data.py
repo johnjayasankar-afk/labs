@@ -12,7 +12,7 @@ builds only Labs tells), draws one state per phase; the counts must match.
 
 SITE = dict(
     name='John Jayasankar',
-    domain='https://labs-rouge.vercel.app',
+    domain='https://labs.johnjayasankar.com',
     email='johnjayasankar@gmail.com',
     portfolio='https://johnjayasankar.com/',
     substack='https://substack.com/@johnjayasankar',

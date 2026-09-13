@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://labs-rouge.vercel.app/sitemap.xml
+Sitemap: https://labs.johnjayasankar.com/sitemap.xml
