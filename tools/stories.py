@@ -8,6 +8,9 @@ Daylight's Balanced preset), and the bay caption says which. Where a picture
 would otherwise imply a fact nobody published (which ride provider is cheaper,
 which clearing venue wins), the story shows the rule instead of a result.
 
+Gridiron's story is captured real games: every figure in it is one Gridiron shows
+replaying its NFL Week 1 fixtures, and the bay says so.
+
 Mechanics
   data-step on the story root is the phase being shown. The HTML is written at
   the story's resting phase, so it is complete without script.
@@ -65,6 +68,7 @@ ICONS = dict(
     doc='<path d="M4.4 2.4h4.8l2.4 2.4v8.8H4.4z"/><path d="M6.2 7.6h3.6M6.2 10h3.6"/>',
     refresh='<path d="M12.6 6.2A4.9 4.9 0 0 0 3.6 6M3.4 9.8a4.9 4.9 0 0 0 9 .2"/><path d="M12.8 3.3v2.9H9.9M3.2 12.7V9.8h2.9"/>',
     bell='<path d="M4.4 11V7.4a3.6 3.6 0 0 1 7.2 0V11l1 1.2H3.4z"/><path d="M6.8 13.6a1.3 1.3 0 0 0 2.4 0"/>',
+    field='<rect x="2.2" y="4" width="11.6" height="8" rx="1.9"/><path d="M5.9 4v8M10.1 4v8" stroke-opacity=".45"/><ellipse cx="9" cy="8" rx="2.3" ry="1.35" %s/>' % _DOT,
 )
 
 # the pointer that presses buttons in a story
@@ -580,6 +584,135 @@ def daylight(m):
 
 
 # ----------------------------------------------------------------------------
+# Gridiron · Slate, Drive, Odds, Touchdown (captured real games, NFL Week 1 replay)
+# ----------------------------------------------------------------------------
+# Every figure is one Gridiron shows while replaying the ESPN and Kalshi data it
+# captured for Sunday 13 September 2026: the live slate at 4:33 PM Eastern, then
+# ARI at LAC, through the touchdown that ended ARI's opening drive.
+GR_SLATE = [('OT 4:57', 'NO at DET', (24, 31), 'Overtime · 7-point game'),
+            ('Q1 9:34', 'ARI at LAC', (0, 0), 'Tying or go-ahead chance in the red zone'),
+            ('Q4 1:57', 'CHI at CAR', (59, 37), None),
+            ('Q1 12:11', 'GB at MIN', (3, 0), None)]
+# ARI's opening drive, spot to spot, in yards from ARI's own goal line. The
+# incomplete pass and the run for no gain left the ball where it was.
+GR_DRIVE = [(30, 57, 'pass'), (57, 59, 'run'), (59, 70, 'run'), (70, 75, 'pass'), (75, 79, 'run'),
+            (79, 81, 'run'), (81, 92, 'pass'), (92, 95, 'run')]
+GR_FAR, GR_NEAR, GR_AXIS = 28.0, 84.0, 56.0
+
+
+def gr_x(u, y):
+    """Where a point u yards from the left end line (0 to 120) sits at height y. The
+    far sideline is drawn narrower than the near one: a light broadcast view."""
+    t = (y - GR_FAR) / (GR_NEAR - GR_FAR)
+    left, right = 44 - 32 * t, 256 + 32 * t
+    return left + (right - left) * u / 120
+
+
+def gr_band(u0, u1):
+    return 'M%.1f %.1fL%.1f %.1fL%.1f %.1fL%.1f %.1fZ' % (gr_x(u0, GR_FAR), GR_FAR, gr_x(u1, GR_FAR), GR_FAR,
+                                                        gr_x(u1, GR_NEAR), GR_NEAR, gr_x(u0, GR_NEAR), GR_NEAR)
+
+
+def gr_across(u):
+    return 'M%.1f %.1fL%.1f %.1f' % (gr_x(u, GR_FAR), GR_FAR, gr_x(u, GR_NEAR), GR_NEAR)
+
+
+def svgel(m, tag, cls, attrs, on=None, style=None):
+    """An SVG element that belongs to some phases, written at the resting one."""
+    c = cls + (' is-on' if on is not None and in_spec(on, m.rest) else '')
+    extra = (' data-on="%s"' % on if on is not None else '') + (' style="%s"' % style if style else '')
+    return '<%s class="%s"%s %s/>' % (tag, c, extra, attrs)
+
+
+def gr_pitch(m):
+    ax = lambda u: gr_x(u, GR_AXIS)  # noqa: E731
+    nl, nr = gr_x(0, GR_NEAR), gr_x(120, GR_NEAR)
+    out = ['<path class="gr-slab" d="M%.1f %.1fL%.1f %.1fL%.1f %.1fL%.1f %.1fZ"/>' % (nl, GR_NEAR, nr, GR_NEAR, nr + 2, GR_NEAR + 5, nl - 2, GR_NEAR + 5),
+           '<path class="gr-turf" d="%s"/>' % gr_band(0, 120)]
+    out += ['<path class="gr-mow" d="%s"/>' % gr_band(u, u + 10) for u in (10, 30, 50, 70, 90)]
+    out += ['<path class="gr-ez" d="%s"/>' % gr_band(0, 10), '<path class="gr-ez" d="%s"/>' % gr_band(110, 120)]
+    # red zone while ARI is inside the LAC 20; the end zone lights once the ball reaches it
+    out.append(svgel(m, 'path', 'gr-rz', 'd="%s"' % gr_band(90, 110), on='1-2'))
+    out.append(svgel(m, 'path', 'gr-td', 'd="%s"' % gr_band(110, 120), on='3'))
+    out += ['<path class="gr-yl%s" d="%s"/>' % (' gr-yl--10' if u % 10 == 0 else '', gr_across(u)) for u in range(15, 110, 5)]
+    out += ['<path class="gr-gl" d="%s"/>' % gr_across(u) for u in (10, 110)]
+    out += ['<text class="gr-num" x="%.1f" y="79" text-anchor="middle">%d</text>' % (gr_x(u, 79), min(u - 10, 110 - u)) for u in range(20, 101, 10)]
+    out += ['<text class="gr-ezt%s" transform="translate(%.1f %.1f) rotate(%d)" text-anchor="middle" dominant-baseline="central">%s</text>'
+            % (cls, gr_x(u, GR_AXIS), GR_AXIS, turn, name) for u, turn, name, cls in ((5, -90, 'ARI', ''), (115, 90, 'LAC', ' gr-ezt--lac'))]
+    # the drive, drawn only between reported spots: passes arc, runs sweep
+    out.append('<circle class="gr-spot" cx="%.1f" cy="%.1f" r="1.1" style="--i:-1"/>' % (ax(10 + GR_DRIVE[0][0]), GR_AXIS))
+    for i, (a, b, kind) in enumerate(GR_DRIVE):
+        x1, x2 = ax(10 + a), ax(10 + b)
+        lift = 5 + .55 * (b - a) if kind == 'pass' else 1.6 + .16 * (b - a)
+        out.append('<path class="gr-hop gr-hop--%s" pathLength="1" d="M%.1f %.1fQ%.1f %.1f %.1f %.1f" style="--i:%d"/>'
+                   % (kind, x1, GR_AXIS, (x1 + x2) / 2, GR_AXIS - 2 * lift, x2, GR_AXIS, i))
+        out.append('<circle class="gr-spot" cx="%.1f" cy="%.1f" r="1.1" style="--i:%d"/>' % (x2, GR_AXIS, i))
+    # blue marks the line of scrimmage; on goal to go the goal line, in amber, is the line to gain
+    out.append(svgel(m, 'path', 'gr-los', 'd="%s"' % gr_across(105), on='1-2'))
+    out.append(svgel(m, 'path', 'gr-ltg', 'd="%s"' % gr_across(110), on='1-2'))
+    x1, x2 = ax(105), ax(110)
+    out.append(svgel(m, 'path', 'gr-hop gr-hop--run gr-hop--td', 'pathLength="1" d="M%.1f %.1fQ%.1f %.1f %.1f %.1f"'
+                     % (x1, GR_AXIS, (x1 + x2) / 2, GR_AXIS - 5, x2, GR_AXIS), on='3'))
+    out.append(('<g class="gr-ballg" style="--tx:%.1fpx"><circle class="gr-halo" cx="%.1f" cy="%.1f" r="4.4"/>'
+                '<ellipse class="gr-ball" cx="%.1f" cy="%.1f" rx="3.3" ry="2"/>'
+                '<path class="gr-lace" d="M%.1f %.1fh3M%.1f %.1fv1M%.1f %.1fv1M%.1f %.1fv1"/></g>')
+               % (x2 - x1, x1, GR_AXIS, x1, GR_AXIS, x1 - 1.5, GR_AXIS, x1 - .8, GR_AXIS - .5, x1, GR_AXIS - .5, x1 + .8, GR_AXIS - .5))
+    return '<svg class="gr-svg" viewBox="0 0 300 92" aria-hidden="true" focusable="false">%s</svg>' % ''.join(out)
+
+
+def gr_src(k, v):
+    """A source-named figure, the way Gridiron's cards write DRAFTKINGS LAC −8.5."""
+    return '<span class="gr-src"><i>%s</i><b>%s</b></span>' % (esc(k), esc(v))
+
+
+def gridiron(m):
+    right = m.swap(m.fx('<span class="s-chip s-chip--mint"><i class="gr-dot"></i><span>6 live</span></span>', '0'),
+                   m.chip('Red zone', 'amber', 'alert', '1'), m.chip('Sources named', 'sky', 'layers', '2'),
+                   m.chip('Scoring play', 'mint', 'check', '3'))
+    games = []
+    for i, (clock, name, (away, home), why) in enumerate(GR_SLATE):
+        pick = name == 'ARI at LAC'
+        sub = '<small><i>Watch next</i>%s</small>' % esc(why) if why else ''
+        games.append('<div class="gr-g%s" style="--i:%d"><span class="gr-g__clock">%s</span><span class="gr-g__t"><b>%s</b>%s</span>'
+                     '<span class="gr-g__sc"><b>%d</b><i></i><b>%d</b></span>%s</div>'
+                     % (' gr-g--pick' if pick else '', i, esc(clock), esc(name), sub, away, home,
+                        press(m, 'Open', '0', 1.6, who='You') if pick else '<span></span>'))
+    slate = m.fx('<div class="gr-slate"><div class="gr-slate__head"><span class="gr-live"><i class="gr-dot"></i><b>6</b>live</span>'
+                 '<span class="s-quiet">1 in overtime · 2 in the red zone</span></div><div class="gr-games">%s</div></div>' % ''.join(games),
+                 '0', 's-view', tag='div')
+    # the score bug is text over the field, never drawn into it
+    bug = ('<div class="gr-bug"><span class="gr-bug__tm"><i class="gr-poss"></i>ARI</span><b class="gr-bug__sc">%s</b>'
+           '<span class="gr-bug__clock">%s</span><b class="gr-bug__sc">0</b><span class="gr-bug__tm">LAC</span></div>') % (
+        m.swap(m.fx('0', '0-2'), m.fx(count(7), '3')),
+        m.swap(m.fx('<b>Q1 9:34</b><small>2nd &amp; Goal · LAC 5</small>', '0-2'), m.fx('<b>Q1 8:49</b><small>Touchdown ARI</small>', '3')))
+    pitch = '<div class="gr-pitch">%s%s<span class="gr-note">Schematic · ARI defends left</span></div>' % (gr_pitch(m), bug)
+    # ESPN's win probability for LAC: 69.59% after the run to the 5, 64.89% after the touchdown
+    meter = ('<span class="gr-wp"><span class="gr-wp__tm">ARI</span><span class="gr-wp__track">%s</span>%s</span>'
+             % (var([.5, .5, .304, .351], 'gr-wp__lac'), m.swap(m.fx('<b>LAC 70%</b>', '0-2'), m.fx('<b>LAC 65%</b>', '3'), cls='gr-wp__v')))
+    chance = m.el('div', 's-row s-sweep', ''.join([
+        m.swap(m.fx('<span class="s-k">Drive</span>', '0-1'), m.fx('<span class="s-k">Win prob</span>', '2-')),
+        '<span class="s-cell">%s</span>' % m.swap(
+            m.fx(chips(gr_src('ARI drive', '10 plays · 65 yds'), '<span class="s-quiet s-hide-sm">from ARI 30</span>'), '0-1'),
+            m.fx(meter, '2-', cls='gr-fill')),
+        m.swap(m.fx(m.chip('ESPN', 'soft'), '2-'), cls='s-swap--end gr-end'),
+    ]), '2', '--fd:.1s')
+    market = m.el('div', 's-row s-sweep', ''.join([
+        m.swap(m.fx('<span class="s-k">Spot</span>', '0-1'), m.fx('<span class="s-k">Lines</span>', '2'), m.fx('<span class="s-k">Moment</span>', '3')),
+        '<span class="s-cell">%s</span>' % m.swap(
+            m.fx(chips(gr_src('Ball spot', 'LAC 5'), '<span class="s-quiet s-hide-sm">from the provider’s field-position label</span>'), '0-1'),
+            m.fx(chips(gr_src('DraftKings', 'LAC −8.5 · O/U 47.5'), gr_src('Kalshi', 'LAC 73.5¢')), '2', d=2),
+            m.fx(chips(m.chip('Touchdown ARI', 'mint', 'bell'), '<span class="s-quiet s-hide-sm">5-yard run · Q1 8:49</span>'), '3', d=3)),
+    ]), '2', '--fd:.45s')
+    game = m.fx(pitch + chance + market, '1-', 's-view', tag='div')
+    body = '<div class="s-views">%s%s</div>' % (slate, game)
+    floats = (note(m, 'spark', 'sky', 'Watch next', 'every pick names its reason', '0', 'tr')
+              + note(m, 'field', '', 'Reported spots only', 'a missing spot is never guessed', '1', 'tr')
+              + m.fx(m.chip('Gridiron never calculates a chance', 'ink'), '2', 's-float s-float--bl')
+              + metric(m, '+5', 'ARI on this play, in ESPN’s model', '3', html=count(5, pre='+')))
+    return window('field', 'ARI at LAC', 'Gridiron · NFL Week 1 replay', right, body, cls='s-win--wide', floats=floats)
+
+
+# ----------------------------------------------------------------------------
 # registry: key, group, steps, the step shown at rest, and what it says
 # ----------------------------------------------------------------------------
 STORIES = {
@@ -605,6 +738,8 @@ STORIES = {
                      label='Illustrative interface using RailDrop’s own sample board: a Boston to New York trip booked at $128, scans across the day before, the travel day and the day after, the board of four trains, and one email when Northeast Regional 95 lists at $47.'),
     'daylight': dict(group='labs', n=4, rest=3, fn=daylight,
                      label='Conceptual interface: the Balanced preset stepping from 6500 K by day to 2800 K at 23:30, a six-layer ladder deciding warmth and brightness separately, the sentence Daylight writes for the state, and a readback that separates asked, accepted and confirmed.'),
+    'gridiron': dict(group='labs', n=4, rest=3, fn=gridiron,
+                     label='Schematic interface using captured real games from Gridiron’s NFL Week 1 replay: six games live at once with Watch next naming why ARI at LAC deserves attention, ARI’s drive drawn from reported spots to 2nd and Goal at the LAC 5, ESPN win probability for LAC at 70% beside DraftKings’ closing lines and Kalshi at 73.5 cents, and the 5-yard touchdown run that follows.'),
 }
 
 

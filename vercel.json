@@ -18,6 +18,11 @@
       "permanent": false
     },
     {
+      "source": "/gridiron",
+      "destination": "https://gridiron-pink-chi.vercel.app/",
+      "permanent": false
+    },
+    {
       "source": "/agentfit",
       "destination": "https://agent-fit2.vercel.app/",
       "permanent": false

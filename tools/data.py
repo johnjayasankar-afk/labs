@@ -6,7 +6,7 @@ product's own published example or sample data, and every bay footer says which
 one. The build refuses em and en dashes, so ranges read "8.5 to 19".
 
 A build's phases are (tab, caption). Its story, in tools/stories.py (RideLens,
-Daylight, RailDrop, shared with the portfolio) or tools/labs_stories.py (the four
+Daylight, RailDrop and Gridiron, shared with the portfolio) or tools/labs_stories.py (the four
 builds only Labs tells), draws one state per phase; the counts must match.
 `route` is the short link on this domain; vercel.json redirects it to `live`."""
 
@@ -20,7 +20,7 @@ SITE = dict(
     city='New York',
     year='2026',
     title='Labs · John Jayasankar',
-    description='Independent products John Jayasankar shipped: RideLens, Daylight, RailDrop, and other instruments.',
+    description='Independent products John Jayasankar shipped: RideLens, Daylight, RailDrop, Gridiron, and other instruments.',
     og_description='Independent products, shipped.',
     og_image='/assets/img/og.jpg',
     og_alt='Labs · John Jayasankar · independent products, shipped',
@@ -89,7 +89,27 @@ BUILDS = [
                 ('Alert', 'Illustrative: one email when a listed fare beats what you paid. Confirm on Amtrak.')],
     ),
     dict(
-        slug='agentfit', n='04', name='AgentFit', cat='Model', tag='Decision model', featured=False,
+        slug='gridiron', n='04', name='Gridiron', cat='Live data', tag='Live data', featured=True,
+        line='Every game. Every drive. One view.',
+        blurb='A live NFL and college football command center: a 3D field for every game, with the reported ball spot, win probability and odds beside it.',
+        does=['Follow every live NFL and college game, each on its own 3D field',
+              'Draw only reported spots: the ball, the line of scrimmage, the line to gain',
+              'Put ESPN win probability, DraftKings lines and Kalshi prices beside the score'],
+        stats=[('3', 'sources, each named'), ('0', 'guessed ball spots'), ('446', 'unit and integration tests')],
+        rule='Reported, never guessed.',
+        rule_body='Every spot, clock and chance comes from a source that reported it. A missing ball spot says so; it is never guessed to midfield.',
+        words='Slate Drive Spot Chance Lines Touchdown',
+        route='/gridiron', live='https://gridiron-pink-chi.vercel.app/', case='https://johnjayasankar.com/work/gridiron',
+        bay=dict(title='Gridiron · football command center', sub='NFL Week 1 replay · ARI at LAC · captured real games',
+                 big='6 → 1', big_sub='live games → one view',
+                 foot='Captured real games from Gridiron’s NFL Week 1 replay · figures as ESPN, DraftKings and Kalshi reported them · not betting advice'),
+        phases=[('Slate', 'Replay of captured real games: six live at once, and Watch next names why ARI at LAC deserves attention.'),
+                ('Drive', 'Reported spots only: 10 plays and 65 yards to 2nd & Goal at the LAC 5, where the goal line is the line to gain.'),
+                ('Odds', 'Every chance is named: ESPN win probability LAC 70%, DraftKings closing lines, Kalshi LAC to win 73.5¢.'),
+                ('Touchdown', 'A 5-yard touchdown run, announced once, and ESPN’s model moves ARI +5 on the play.')],
+    ),
+    dict(
+        slug='agentfit', n='05', name='AgentFit', cat='Model', tag='Decision model', featured=False,
         line='When should a workflow get an agent?',
         blurb='AgentFit scores economic opportunity, technical readiness, controllability, and risk before anyone writes an orchestration graph.',
         does=['Score fit from 0 to 100 across six weighted components',
@@ -109,7 +129,7 @@ BUILDS = [
                 ('Verdict', 'Effort is always a range, 8.5 to 19. Plausible return, counted as capacity, not savings.')],
     ),
     dict(
-        slug='cartonry', n='05', name='Cartonry', cat='Tool', tag='Tool', featured=False,
+        slug='cartonry', n='06', name='Cartonry', cat='Tool', tag='Tool', featured=False,
         line='Packaging dielines - cut, crease, fold, cost.',
         blurb='Production-ready packaging dielines at any size. Export SVG, true-scale PDF, and DXF. Runs entirely in your browser.',
         does=['Enter the internal size, and the board allowances are added on top',
@@ -129,7 +149,7 @@ BUILDS = [
                 ('Export', 'SVG, true-scale PDF, or DXF, generated on the device.')],
     ),
     dict(
-        slug='keepfloor', n='06', name='KeepFloor', cat='Pricing', tag='Pricing', featured=False,
+        slug='keepfloor', n='07', name='KeepFloor', cat='Pricing', tag='Pricing', featured=False,
         line='The Etsy list price that still pays you.',
         blurb='One listing, the published fee stack, and the lowest charmed price that survives Offsite Ads. Math stays on this device.',
         does=['Every published Etsy fee, stacked line by line for one listing',
@@ -149,7 +169,7 @@ BUILDS = [
                 ('Keep', 'At $32.00 you keep $19.08, and the math stays on the device.')],
     ),
     dict(
-        slug='pricing', n='07', name='Pricing Hub', cat='Workbook', tag='Workbook', featured=False,
+        slug='pricing', n='08', name='Pricing Hub', cat='Workbook', tag='Workbook', featured=False,
         line='Contractor job costing, estimate to invoice.',
         blurb='Estimate, schedule, track crew hours and costs, handle change orders, invoice, and see real profit per job. 24 connected sheets for Excel and Google Sheets.',
         does=['Price a job line by line, then print a client-ready proposal',
@@ -173,19 +193,21 @@ BUILDS = [
 HOME = dict(
     badge='Independent products · 2026',
     h1=('Instruments I shipped.', 'Built end-to-end. No demos.'),
-    lede='Consumer tools, pricing engines, and a model for when a workflow should get an agent.',
-    meta=['07 live', '03 featured', 'New York'],
+    lede='Consumer tools, pricing engines, a live football command center, and a model for when a workflow should get an agent.',
+    meta=['08 live', '04 featured', 'New York'],
     # the hero showcase keeps the Labs site's own framing: range, one bench
-    show=[('consumer', '01 Consumer', 'ridelens'), ('native', '02 Native', 'daylight'), ('model', '03 Model', 'agentfit')],
-    proof=[('7', 'live builds on one bench', '#featured'),
+    show=[('consumer', '01 Consumer', 'ridelens'), ('native', '02 Native', 'daylight'), ('model', '03 Model', 'agentfit'), ('live', '04 Live data', 'gridiron')],
+    # the narrowest phones name the four tabs without their numbers
+    show_short=dict(consumer='Consumer', native='Native', model='Model', live='Live'),
+    proof=[('8', 'live builds on one bench', '#featured'),
            ('4 → 1', 'ride providers, one RideLens board', '#ridelens'),
            ('31', 'autonomy gates in AgentFit', '#agentfit'),
            ('893', 'formula checks in Pricing Hub', '#pricing')],
-    featured=dict(n='01', kicker='Featured', h2=('Three systems', 'that show the range.')),
+    featured=dict(n='01', kicker='Featured', h2=('Four systems', 'that show the range.')),
     also=dict(n='02', kicker='Also shipped', h2=('Narrower instruments.', 'Same bar.')),
     rules=dict(n='03', kicker='What they share', h2=('No demos.', 'The rule each build keeps.')),
     visit=dict(k='johnjayasankar.com', h2='The portfolio.',
-               lede='Production AI agents and 0→1 financial infrastructure, with case studies for RideLens, Daylight, and RailDrop.',
+               lede='Production AI agents and 0→1 financial infrastructure, with case studies for RideLens, Daylight, RailDrop, and Gridiron.',
                link='Open the portfolio'),
     hint='j / k builds · Enter opens · 1-4 phases · ⌘K jump · ? keys',
 )

@@ -38,7 +38,7 @@ BY = {b['slug']: b for b in BUILDS}
 FEATURED = [b for b in BUILDS if b['featured']]
 ALSO = [b for b in BUILDS if not b['featured']]
 ROUTES = {b['route'] for b in BUILDS}
-LASTMOD = '2026-09-13'
+LASTMOD = '2026-09-14'
 NEWTAB = '<span class="sr-only"> (opens in a new tab)</span>'
 V = {}
 
@@ -274,11 +274,11 @@ def mega(base):
                         % (b['route'], esc(b['name']), b['n'], esc(b['line'])) for b in items)
         return '<div class="mega__col"><p class="mega__h">%s</p>%s</div>' % (esc(title), links)
     lead = ('<div class="mega__lead"><p class="mega__h">Overview</p>'
-            '<a class="mega__big" href="%s#featured"><span>All builds</span><small>07 live · 03 featured</small></a>'
+            '<a class="mega__big" href="%s#featured"><span>All builds</span><small>%02d live · %02d featured</small></a>'
             '<a class="mega__big" href="%s#rules"><span>What they share</span><small>The rule each build keeps</small></a>'
             '<a class="mega__card" href="%s" target="_blank" rel="noopener"><img src="%s" alt="" width="640" height="400" loading="lazy" decoding="async">'
             '<span class="mega__card-t">Portfolio</span><small>Case studies for the featured builds</small>%s</a></div>') % (
-        base, base, esc(S['portfolio']), img_v('assets/img/portfolio.jpg'), NEWTAB)
+        base, len(BUILDS), len(FEATURED), base, esc(S['portfolio']), img_v('assets/img/portfolio.jpg'), NEWTAB)
     return ('<div class="mega mega--labs" id="mega-builds" data-mega-panel><div class="mega__grid mega__grid--labs">%s%s%s</div></div>'
             % (lead, col('Featured', FEATURED), col('Also shipped', ALSO)))
 
@@ -460,8 +460,9 @@ def showcase():
         b = BY[slug]
         sel = i == 0
         tabs.append('<button type="button" class="seg__btn show__tab" role="tab" id="show-tab-%s" aria-controls="show-%s" '
-                    'aria-selected="%s" tabindex="%s" data-show-tab><span>%s</span><span class="show__fill" aria-hidden="true"><i></i></span></button>'
-                    % (key, key, 'true' if sel else 'false', '0' if sel else '-1', esc(tab)))
+                    'aria-selected="%s" tabindex="%s" data-show-tab><span class="show__tl show__tl--long">%s</span><span class="show__ts">%s</span>'
+                    '<span class="show__fill" aria-hidden="true"><i></i></span></button>'
+                    % (key, key, 'true' if sel else 'false', '0' if sel else '-1', esc(tab), esc(H['show_short'][key])))
         panels.append('<div class="show__panel" role="tabpanel" id="show-%s" aria-labelledby="show-tab-%s"%s>%s<p class="show__more">%s</p></div>'
                       % (key, key, '' if sel else ' hidden', bay('bay-show-' + key, b, 'steps'), open_links(b)))
     return ('<div class="show" data-show data-reveal><div class="show__bar"><div class="seg" role="tablist" aria-label="Range, one bench" data-seg>%s'
@@ -511,7 +512,7 @@ def home():
                     % (esc(' '.join([b['words']] * 3)), rd(i % 4), b['n'], esc(b['name']), esc(b['rule']), esc(b['rule_body']))
                     for i, b in enumerate(BUILDS))
     shared = ('<section class="sect" id="rules" data-locus data-label="What they share" aria-labelledby="rules-h"><div class="wrap">'
-              '<div class="shead shead--center" data-reveal>%s%s</div><ul class="rules rules--seven">%s</ul></div></section>\n') % (
+              '<div class="shead shead--center" data-reveal>%s%s</div><ul class="rules rules--eight">%s</ul></div></section>\n') % (
         slabel(R['n'], R['kicker']), heading(R['h2'], 'rules-h'), rules)
 
     Vt = H['visit']
@@ -540,7 +541,7 @@ def notfound():
     body = ('<section class="phead phead--center phead--nf" id="top" data-locus data-label="Not found"><div class="wrap phead__in" data-reveal>%s%s'
             '<p class="phead__lede">%s</p><p class="nf__path"><span>Requested</span><code data-nf-path>/</code></p>'
             '<div class="nf__recent" data-nf-recent hidden><p class="nf__k">Recent</p><ul data-nf-list></ul></div>'
-            '<div class="actions actions--center">%s</div><ul class="labindex labindex--seven" aria-label="Every build">%s</ul>%s</div></section>\n') % (
+            '<div class="actions actions--center">%s</div><ul class="labindex labindex--eight" aria-label="Every build">%s</ul>%s</div></section>\n') % (
         slabel(None, N['kicker']), heading(N['h1'], 'page-title', 'h1', 'h1'), esc(N['lede']), acts, index, hint(N['hint']))
     return shell('notfound', '/404', 'Not found · ' + S['title'], S['description'], 'Not found', body, base='/', robots='noindex, follow')
 

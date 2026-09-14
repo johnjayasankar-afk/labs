@@ -86,16 +86,16 @@ body { width: 1200px; height: 630px; }
     <p class="badge og__badge"><span class="badge__dot"></span>Independent products · 2026</p>
     <p class="og__name">John Jayasankar <span class="brand__tag">Labs</span></p>
     <p class="og__lede">Instruments I shipped. <span>Built end-to-end. No demos.</span></p>
-    <p class="og__career">RideLens · Daylight · RailDrop · AgentFit · Cartonry · KeepFloor · Pricing Hub</p>
+    <p class="og__career">RideLens · Daylight · RailDrop · Gridiron · AgentFit · Cartonry · KeepFloor · Pricing Hub</p>
     <div class="og__proof">
-      <p><b>7</b><span>live builds on one bench</span></p>
+      <p><b>8</b><span>live builds on one bench</span></p>
       <p><b>4 → 1</b><span>ride providers, one RideLens board</span></p>
       <p><b>31</b><span>autonomy gates in AgentFit</span></p>
       <p><b>893</b><span>formula checks in Pricing Hub</span></p>
     </div>
   </div>
   <div class="og__stage">
-    <p class="og__head"><span>Range · one bench</span><span>07 live</span></p>
+    <p class="og__head"><span>Range · one bench</span><span>08 live</span></p>
     {{body}}
   </div>
   <p class="og__dom">{{domain}}</p>
