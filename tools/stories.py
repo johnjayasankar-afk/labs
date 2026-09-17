@@ -218,7 +218,7 @@ def hero(m):
     # each agent's bar falls to its real ratio: 8 of 210 minutes, 11 of 270
     minis = ''.join('<span class="s-mini"><span>%s</span><b>%s</b><i class="s-mini__bar"><i class="s-mini__fill" style="--r:%.3f"></i></i>'
                     '<small>%s</small></span>' % (name, esc(v), r, esc(what))
-                    for name, v, r, what in (('I-Port', '3.5h → 8m', 8 / 210, 'setup'), ('QT CoCo', '4.5h → 11m', 11 / 270, 'investigation')))
+                    for name, v, r, what in (('Setup agent', '3.5h → 8m', 8 / 210, 'setup'), ('Triage agent', '4.5h → 11m', 11 / 270, 'investigation')))
     agents = m.el('div', 's-lane', '<p class="s-k">Agents</p>' + minis, on='0')
     gate = m.el('div', 's-lane', '<p class="s-k">Human gate</p>%s<small class="s-lane__note">Between agent intent and irreversible action</small>' % m.swap(
         m.fx(skel(5.5, 3.5), '0', 's-stack'),
@@ -226,22 +226,22 @@ def hero(m):
         m.fx(m.chip('Approved', 'mint', 'check') + '<span class="s-quiet">typed actions released</span>', '2', 's-stack')), on='1')
     market = m.el('div', 's-lane s-lane--net', '<p class="s-k">Market</p>%s<span class="s-lane__foot">%s</span>' % (
         network(12, 38, 's-net--mini'),
-        m.swap(m.fx('<span class="s-quiet">LCH SwapAgent</span>', '0-1'), m.fx('<b class="s-lane__big">$6.5T</b><small>eligible</small>', '2'))), on='2')
+        m.swap(m.fx('<span class="s-quiet">Central settlement</span>', '0-1'), m.fx('<b class="s-lane__big">+34%</b><small>per run</small>', '2'))), on='2')
 
     def flow(on):
         # a typed action travels on to the next lane as that lane takes over
         return '<span class="s-flow">%s%s</span>' % (ico('arrow'), m.el('i', 's-packet', '', on))
     body = '<div class="s-lanes">%s%s%s%s%s</div>' % (agents, flow('1'), gate, flow('2'), market)
     floats = (note(m, 'spark', 'sky', 'Hours → minutes', 'expert work, now agents', '0', 'tr')
-              + note(m, 'shield', 'amber', 'One control model', 'across Quantile systems', '1', 'tr')
-              + metric(m, '$6.5T', 'eligible notional, same gate', '2'))
+              + note(m, 'shield', 'amber', 'Typed actions', 'released only after approval', '1', 'tr')
+              + metric(m, '+34%', 'notional reduction per run', '2', html=count(34, pre='+', post='%')))
     return window('network', 'Agents and markets', 'Quantile systems · schematic', right, body, cls='s-win--wide', floats=floats)
 
 
 # ----------------------------------------------------------------------------
-# I-Port · Before, Gate, After
+# Compression setup agent · Before, Gate, After
 # ----------------------------------------------------------------------------
-def iport(m):
+def setup_agent(m):
     right = m.swap(m.chip('Senior engineering', '', 'person', '0'), m.chip('Agent + operator', 'sky', 'spark', '1'),
                    m.chip('Operations', 'mint', 'check', '2'))
     body = ''.join([
@@ -266,13 +266,13 @@ def iport(m):
     floats = (note(m, 'clock', '', '3.5 hours', 'per run, senior engineering', '0', 'tr')
               + note(m, 'shield', 'amber', 'HITL on', 'typed, reversible tools only', '1', 'tr')
               + metric(m, '3×', 'run volume, same headcount', '2', html=count(3, post='×')))
-    return window('sliders', 'Compression-run setup', 'I-Port · schematic', right, body, ft, floats=floats)
+    return window('sliders', 'Compression-run setup', 'Setup agent · schematic', right, body, ft, floats=floats)
 
 
 # ----------------------------------------------------------------------------
-# QT CoCo · Incident, Evidence, Diagnose
+# Incident triage agent · Incident, Evidence, Diagnose
 # ----------------------------------------------------------------------------
-def coco(m):
+def incident_agent(m):
     right = m.swap(m.chip('Pages engineering', 'amber', 'alert', '0'), m.chip('Gathering evidence', 'sky', 'search', '1'),
                    m.chip('Resolved in operations', 'mint', 'check', '2'))
     # while evidence arrives the packet fills; it is complete before anything resolves
@@ -300,20 +300,20 @@ def coco(m):
               m.swap(m.fx('<b class="s-val">4.5h</b>', '0'), m.fx('<b class="s-val s-val--quiet">Triaging</b>', '1'),
                      m.fx('<b class="s-val s-val--mint">%s</b>' % count(11, post='m', frm=270), '2'), cls='s-swap--end'))
     floats = (note(m, 'person', 'amber', 'Senior engineering', 'paged by default', '0', 'tr')
-              + note(m, 'network', 'sky', 'Two MCP surfaces', 'run and ops evidence', '1', 'tr')
+              + note(m, 'network', 'sky', 'Two MCP servers', 'run and ops evidence', '1', 'tr')
               + metric(m, '−78%', 'escalations to engineering', '2', html=count(78, pre='−', post='%')))
-    return window('alert', 'Incident triage', 'QT CoCo · schematic', right, body, ft, floats=floats)
+    return window('alert', 'Incident triage', 'Incident agent · schematic', right, body, ft, floats=floats)
 
 
 # ----------------------------------------------------------------------------
-# LCH SwapAgent · Gross, Run, Compressed, Risk envelope
+# Cross-currency compression · Gross, Run, Compressed, Risk envelope
 # ----------------------------------------------------------------------------
 def cross_currency(m):
     right = m.swap(m.chip('Bilateral only', '', None, '0'), m.chip('Run in progress', 'sky', 'spark', '1'),
                    m.chip('Compressed', 'mint', 'check', '2'), m.chip('Risk intent held', 'mint', 'shield', '3'))
     stats = ''.join([
         '<div class="s-stat"><span class="s-k">Eligible notional</span>%s</div>' % m.swap(
-            m.fx('<span class="s-quiet">Network offsets unused</span>', '0-1'), m.fx('<b class="s-big">$6.5T</b>', '2-')),
+            m.fx('<span class="s-quiet">Network offsets unused</span>', '0-1'), m.fx('<b class="s-big">$X.XT</b>', '2-')),
         '<div class="s-stat"><span class="s-k">Network</span><span class="s-line2">18 banks · 12 pairs</span></div>',
         '<div class="s-stat"><span class="s-k">Reduction per run</span>%s</div>' % m.swap(
             m.fx('<span class="s-quiet">Pairs only</span>', '0'), m.fx(skel(5.5, busy=True), '1'),
@@ -325,14 +325,14 @@ def cross_currency(m):
             m.fx(skel(4.6), '0-2'), m.fx(m.chip('Inside its constraints', 'mint', 'shield'), '3')),
     ])
     body = ('<div class="s-split"><div class="s-netbox">%s<p class="s-legend"><span><i class="s-lg s-lg--n"></i>Participant</span>'
-            '<span><i class="s-lg s-lg--hub"></i>LCH SwapAgent</span></p></div><div class="s-stats">%s</div></div>') % (network(), stats)
-    floats = (note(m, 'network', 'sky', 'SwapAgent settles', 'compatible offsets across the network', '1', 'tr')
+            '<span><i class="s-lg s-lg--hub"></i>Settlement service</span></p></div><div class="s-stats">%s</div></div>') % (network(), stats)
+    floats = (note(m, 'network', 'sky', 'Central service settles', 'compatible offsets across the network', '1', 'tr')
               + m.fx(m.chip('Eligible notional is not cash saved', 'ink'), '3', 's-float s-float--bl'))
-    return window('network', 'Cross-currency compression', 'LCH SwapAgent · schematic', right, body, cls='s-win--wide', floats=floats)
+    return window('network', 'Cross-currency compression', 'Central settlement · schematic', right, body, cls='s-win--wide', floats=floats)
 
 
 # ----------------------------------------------------------------------------
-# Simplified Compression · Split, Diff, Lock
+# Dual-source valuation · Split, Diff, Lock
 # ----------------------------------------------------------------------------
 VAL_ROWS = [(.52, .5, .5), (.48, .9, .46), (.55, .52, .53), (.5, .12, .49), (.46, .47, .47)]
 
@@ -359,12 +359,12 @@ def valuation(m):
     floats = (note(m, 'columns', 'sky', 'Two sources', 'before the live window', '0', 'tr')
               + note(m, 'alert', 'amber', 'Fails early', 'not mid-cycle', '1', 'tr')
               + metric(m, '−91%', 'failed-run resubmissions', '2', html=count(91, pre='−', post='%'))
-              + m.fx(m.chip('$6T+ cycle notional under check', 'ink'), '2', 's-float s-float--bl'))
-    return window('columns', 'Valuation check', 'Simplified Compression · schematic', right, body, ft, cls='s-win--wide', floats=floats)
+              + m.fx(m.chip('$XT+ cycle notional under check', 'ink'), '2', 's-float s-float--bl'))
+    return window('columns', 'Valuation check', 'Dual-source valuation · schematic', right, body, ft, cls='s-win--wide', floats=floats)
 
 
 # ----------------------------------------------------------------------------
-# ForexClear · Book, Gates, Accept
+# FX forward and NDF compression · Book, Gates, Accept
 # ----------------------------------------------------------------------------
 def fx_compression(m):
     right = m.swap(m.chip('Book ready', '', 'doc', '0'), m.chip('Gating', 'amber', 'shield', '1'),
@@ -375,7 +375,7 @@ def fx_compression(m):
     body = ''.join([
         row('Book', chips(m.chip('FX forwards', 'soft'), m.chip('NDFs', 'soft'))),
         row('Eligibility', m.swap(m.fx(skel(5.2), '0'), m.fx(m.chip('Eligible', 'soft', 'check'), '1-')), m.status(idle='0', done='1-', d=0), m=m, sweep='1', fd=.05),
-        row('Margin', m.swap(m.fx(skel(6.6), '0'), m.fx(m.chip('ForexClear IM, inside the optimizer', 'sky', 'calc'), '1-', d=1)), m.status(idle='0', done='1-', d=2), m=m, sweep='1', fd=.3),
+        row('Margin', m.swap(m.fx(skel(6.6), '0'), m.fx(m.chip('CCP IM, inside the optimizer', 'sky', 'calc'), '1-', d=1)), m.status(idle='0', done='1-', d=2), m=m, sweep='1', fd=.3),
         row('Sources', '<span class="s-srcs">%s<span class="s-quiet">four must agree</span></span>' % sources, m.status(idle='0', done='1-', d=6), m=m, sweep='1', fd=.6),
         row('Proposals', m.swap(m.fx(skel(4, 3.2), '0'), m.fx(chips(m.chip('Cut before live', 'amber', 'alert'), m.chip('Kept', 'soft', 'check')), '1', d=7),
                                 m.fx(m.chip('Accepted', 'mint', 'check'), '2')), m.status(idle='0', wait='1', done='2', d=7), m=m, hold='1', sweep='2', fd=.5),
@@ -387,11 +387,11 @@ def fx_compression(m):
               + note(m, 'shield', 'amber', 'Gates before live', 'margin and four sources', '1', 'tr')
               + metric(m, '40+', 'live runs, 100% acceptance', '2', html=count(40, post='+'))
               + m.fx(m.chip('−94% live-run failures', 'ink'), '2', 's-float s-float--bl'))
-    return window('shield', 'FX proposal', 'ForexClear · schematic', right, body, ft, floats=floats)
+    return window('shield', 'FX proposal', 'FX compression · schematic', right, body, ft, floats=floats)
 
 
 # ----------------------------------------------------------------------------
-# AI Platform & Controls · Context, Actions, Services, HITL, Eval
+# Agent Platform & Controls · Context, Actions, Services, HITL, Eval
 # ----------------------------------------------------------------------------
 LAYERS = [('Context', 'MCP servers and domain APIs', 'sky'), ('Actions', 'Pydantic-typed actions', 'sky'),
           ('Services', 'Deterministic, outside the model', ''), ('HITL', 'A human approves the consequential step', 'amber'),
@@ -422,13 +422,13 @@ def platform(m):
     body = '<div class="s-plat">%s<span class="s-flow s-flow--v">%s</span><div class="s-layers">%s</div></div>' % (systems, ico('arrow'), ''.join(layers))
     floats = (metric(m, '5', 'enterprise systems, one path', '4', html=count(5))
               + m.fx(m.chip('Scope expands when evals say so', 'ink'), '4', 's-float s-float--bl'))
-    return window('layers', 'Agent control plane', 'AI Platform & Controls · schematic', right, body, cls='s-win--wide', floats=floats)
+    return window('layers', 'Agent control plane', 'Agent Platform & Controls · schematic', right, body, cls='s-win--wide', floats=floats)
 
 
 # ----------------------------------------------------------------------------
-# OpenGamma What-If · Base, + Trade, Simulate, Compare
+# Pre-trade margin simulator · Base, + Trade, Simulate, Compare
 # ----------------------------------------------------------------------------
-VENUES = ['CME SPAN', 'ICE IRM', 'OTC']
+VENUES = ['Exchange A', 'Exchange B', 'OTC']
 
 
 def margin_simulator(m):
@@ -452,7 +452,7 @@ def margin_simulator(m):
     ])
     floats = (metric(m, 'up to −30%', 'initial margin, when offsets apply', '3', html=count(30, pre='up to −', post='%'))
               + m.fx(m.chip('Observed potential, not a guarantee', 'ink'), '3', 's-float s-float--bl'))
-    return window('calc', 'Pre-trade what-if', 'OpenGamma · schematic', right, body, cls='s-win--wide', floats=floats)
+    return window('calc', 'Margin simulation', 'Margin simulator · schematic', right, body, cls='s-win--wide', floats=floats)
 
 
 # ----------------------------------------------------------------------------
@@ -717,21 +717,21 @@ def gridiron(m):
 # ----------------------------------------------------------------------------
 STORIES = {
     'hero': dict(group='agents', n=3, rest=2, fn=hero,
-                 label='Schematic interface: two production agents, I-Port and QT CoCo, cut expert work from hours to minutes; their typed actions wait at a human approval gate; offsets then settle multilaterally through LCH SwapAgent, $6.5T eligible under the same control model.'),
-    'iport': dict(group='agents', n=3, rest=2, fn=iport,
-                  label='Schematic interface: compression-run setup owned by senior engineering at 3.5 hours a run, then an agent with authorised live context and typed, reversible actions held for operator approval, then an 8-minute cycle in operations at three times the volume.'),
-    'coco': dict(group='agents', n=3, rest=2, fn=coco,
-                 label='Schematic interface: an incident that pages engineering by default, then run and ops evidence gathered through two MCP surfaces with six years of support knowledge, then a complete packet resolved in operations in 11 minutes, with escalations down 78%.'),
+                 label='Schematic interface: two production agents, one for compression-run setup and one for incident triage, cut expert work from hours to minutes; their typed actions wait at a human approval gate; and, separately, offsets settle multilaterally through a central settlement service, with 34% more notional reduction per run.'),
+    'setup-agent': dict(group='agents', n=3, rest=2, fn=setup_agent,
+                        label='Schematic interface: compression-run setup owned by senior engineering at 3.5 hours a run, then an agent with authorized live context and typed, reversible actions held for operator approval, then an 8-minute cycle in operations at three times the volume.'),
+    'incident-agent': dict(group='agents', n=3, rest=2, fn=incident_agent,
+                           label='Schematic interface: an incident that pages engineering by default, then run and ops evidence gathered through two MCP servers with six years of support knowledge, then a complete packet resolved in operations in 11 minutes, with escalations down 78%.'),
     'cross-currency': dict(group='markets', n=4, rest=3, fn=cross_currency,
-                           label='Schematic interface: eighteen banks netting only in pairs, then a multilateral run settled through LCH SwapAgent, compressed with $6.5T of notional made eligible and 34% more reduction per run, each book inside its constraints.'),
+                           label='Schematic interface: eighteen banks netting only in pairs, then a multilateral run settled through a central settlement service, compressed with trillions of dollars of notional made eligible and 34% more reduction per run, each book inside its constraints.'),
     'valuation': dict(group='markets', n=3, rest=2, fn=valuation,
                       label='Schematic interface: an independent valuation beside internal marks before the live window, rows outside the tolerance band failing early, then locking only when both sources agree, 48 hours ahead of the live cycle.'),
     'fx-compression': dict(group='markets', n=3, rest=2, fn=fx_compression,
-                           label='Schematic interface: an FX forwards and NDF book, then eligibility, ForexClear initial margin inside the optimizer and four agreeing sources gating each proposal before live, then acceptance measured across 40+ live runs.'),
+                           label='Schematic interface: an FX forwards and NDF book, then eligibility, clearing-house initial margin inside the optimizer and four agreeing sources gating each proposal before live, then acceptance measured across 40+ live runs.'),
     'platform': dict(group='agents', n=5, rest=4, fn=platform,
                      label='Schematic interface: five enterprise systems on one control plane, passing context through MCP servers and domain APIs, typed actions, deterministic services and a human approval gate, and finishing at shared evaluation baselines.'),
     'margin-simulator': dict(group='markets', n=4, rest=3, fn=margin_simulator,
-                             label='Schematic interface: a current portfolio with known initial margin, a hypothetical trade outside the book, the same trade simulated across CME SPAN, ICE IRM and OTC, and incremental cost compared with standalone before execution.'),
+                             label='Schematic interface: a current portfolio with known initial margin, a hypothetical trade outside the book, the same trade simulated across two exchanges’ margin models and OTC, and incremental cost compared with standalone before execution.'),
     'ridelens': dict(group='labs', n=4, rest=3, fn=ridelens,
                      label='Illustrative interface: one trip mapped once on live roads across Uber, Lyft, Empower and Curb, and the same quotes ranked by price, soonest pickup or value, with upfront prices, ranges and estimates kept distinct and expired quotes never on top.'),
     'raildrop': dict(group='labs', n=4, rest=3, fn=raildrop,

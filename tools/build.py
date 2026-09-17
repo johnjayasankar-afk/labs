@@ -38,7 +38,8 @@ BY = {b['slug']: b for b in BUILDS}
 FEATURED = [b for b in BUILDS if b['featured']]
 ALSO = [b for b in BUILDS if not b['featured']]
 ROUTES = {b['route'] for b in BUILDS}
-LASTMOD = '2026-09-14'
+LASTMOD = '2026-09-16'
+UPDATED = __import__('datetime').date.fromisoformat(LASTMOD).strftime('%B %Y')
 NEWTAB = '<span class="sr-only"> (opens in a new tab)</span>'
 V = {}
 
@@ -65,8 +66,15 @@ def esc(s):
 
 
 def mval(v):
-    """A figure or heading. The arrow in '4 → 1' is drawn, and read as 'to'."""
-    return esc(v).replace('→', '<i class="to" aria-hidden="true">→</i><span class="sr-only"> to </span>')
+    """A figure or heading. The arrow in '4 → 1' is drawn, and read as 'to'. It stays with
+    the word before it, so a line never starts with an arrow."""
+    text = esc(v).replace(' →', '\u00a0→')
+    return text.replace('→', '<i class="to" aria-hidden="true">→</i><span class="sr-only"> to </span>')
+
+
+def rate(k):
+    """A rate label keeps its slash clause on one line, with no-break spaces rather than markup."""
+    return re.sub(r'\S+ / (?:\d+ )?\S+', lambda m: m.group(0).replace(' ', '\u00a0'), esc(k))
 
 
 def render(tpl, **kw):
@@ -163,7 +171,7 @@ def keep(s):
 
 
 def stat(v, k, cls='stat'):
-    return '<li class="%s"><b class="stat__v"%s>%s</b><span class="stat__k">%s</span></li>' % (cls, count_attr(v), mval(v), esc(k))
+    return '<li class="%s"><b class="stat__v"%s>%s</b><span class="stat__k">%s</span></li>' % (cls, count_attr(v), mval(v), rate(k))
 
 
 def rd(i):
@@ -180,7 +188,7 @@ HEAD = """<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{{title}}</title>
 <meta name="description" content="{{desc}}">
-<link rel="canonical" href="{{url}}">
+{{canonical}}
 <meta name="author" content="John Jayasankar">
 <meta name="robots" content="{{robots}}">
 <meta name="theme-color" content="#f8f6f1">
@@ -200,6 +208,9 @@ HEAD = """<!doctype html>
 <meta name="twitter:image" content="{{ogimg}}">
 <meta name="twitter:image:alt" content="{{ogalt}}">
 <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/img/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<noscript><style>.hdr__bar { background: rgba(248, 246, 241, .94); }</style></noscript>
 <link rel="preload" href="/assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/css/site.css?v={{v}}">
 {{ld}}</head>
@@ -242,7 +253,7 @@ FOOTER = """<footer class="ftr">
         <nav class="ftr__col" aria-label="Elsewhere"><p class="ftr__h">Elsewhere</p>{{elsewhere}}</nav>
       </div>
       <p class="ftr__word ftr__word--labs" aria-hidden="true">Labs<span>.</span></p>
-      <div class="ftr__base"><span>© {{year}} John Jayasankar</span><span class="ftr__locus" data-locus-label>{{label}}</span><span>{{city}}<span class="ftr__clock" data-clock hidden></span></span></div>
+      <div class="ftr__base"><span>© {{year}} John Jayasankar · Updated {{updated}}</span><span class="ftr__locus" data-locus-label>{{label}}</span><span>{{city}}<span class="ftr__clock" data-clock hidden></span></span><p class="ftr__legal">{{legal}}</p></div>
     </div>
   </div>
 </footer>
@@ -258,7 +269,7 @@ OVERLAYS = TOTOP + """<div class="toast" role="status" aria-live="polite" data-t
     <p class="sr-only" id="cmdk-title">Jump to a build</p>
     <div class="cmdk__bar">
       <span class="cmdk__glyph" aria-hidden="true">""" + SEARCH + """</span>
-      <input class="cmdk__input" data-cmdk-input type="text" role="combobox" aria-expanded="true" aria-controls="cmdk-list" aria-autocomplete="list" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="RideLens, Daylight, AgentFit, or type ? for keys">
+      <input class="cmdk__input" data-cmdk-input type="text" aria-label="Search the site" role="combobox" aria-expanded="true" aria-controls="cmdk-list" aria-autocomplete="list" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="RideLens, Daylight, AgentFit, or type ? for keys">
       <button class="cmdk__esc" type="button" data-cmdk-close>Esc</button>
     </div>
     <ul class="cmdk__list" id="cmdk-list" role="listbox" aria-label="Results" data-cmdk-list></ul>
@@ -276,7 +287,7 @@ def mega(base):
     lead = ('<div class="mega__lead"><p class="mega__h">Overview</p>'
             '<a class="mega__big" href="%s#featured"><span>All builds</span><small>%02d live · %02d featured</small></a>'
             '<a class="mega__big" href="%s#rules"><span>What they share</span><small>The rule each build keeps</small></a>'
-            '<a class="mega__card" href="%s" target="_blank" rel="noopener"><img src="%s" alt="" width="640" height="400" loading="lazy" decoding="async">'
+            '<a class="mega__card" href="%s" target="_blank" rel="noopener"><img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="%s" alt="" width="640" height="400" decoding="async">'
             '<span class="mega__card-t">Portfolio</span><small>Case studies for the featured builds</small>%s</a></div>') % (
         base, len(BUILDS), len(FEATURED), base, esc(S['portfolio']), img_v('assets/img/portfolio.jpg'), NEWTAB)
     return ('<div class="mega mega--labs" id="mega-builds" data-mega-panel><div class="mega__grid mega__grid--labs">%s%s%s</div></div>'
@@ -305,7 +316,8 @@ def footer(label, base):
     elsewhere = (link('<span>Portfolio</span>', S['portfolio']) + link('<span>Writing</span>', S['substack'])
                  + link('<span>LinkedIn</span>', S['linkedin']) + '<a href="mailto:%s">Email</a>' % EMAIL)
     return render(FOOTER, year=S['year'], label=esc(label), note=esc(S['note']), email=EMAIL, arrow=ARROW, city=esc(S['city']),
-                  portfolio=btn('Portfolio', S['portfolio'], 'night'), labs=labs, featured=featured, also=also, elsewhere=elsewhere)
+                  portfolio=btn('Portfolio', S['portfolio'], 'night'), labs=labs, featured=featured, also=also, elsewhere=elsewhere,
+                  legal=esc(D.LEGAL_LINE) + ' <a href="/legal">Disclaimer</a>', updated=UPDATED)
 
 
 def scripts():
@@ -322,6 +334,7 @@ def ld_block(ld):
 def shell(page, path, title, desc, label, body, base='', robots='index, follow', ld=None):
     return ''.join([
         render(HEAD, page=page, title=esc(title), desc=esc(desc), url=esc(DOM + path), robots=robots,
+               canonical='' if robots.startswith('noindex') else '<link rel="canonical" href="%s">' % esc(DOM + path),
                ogdesc=esc(S['og_description']), ogimg=esc(DOM + img_v(S['og_image'].lstrip('/'))), ogalt=esc(S['og_alt']),
                v=V['css'], ld=ld_block(ld)),
         '<body data-label="%s">\n' % esc(label),
@@ -546,6 +559,17 @@ def notfound():
     return shell('notfound', '/404', 'Not found · ' + S['title'], S['description'], 'Not found', body, base='/', robots='noindex, follow')
 
 
+def legal():
+    G = D.LEGAL
+    parts = ''.join('<section class="legal__part" aria-labelledby="legal-%d"><h2 class="legal__h" id="legal-%d">%s</h2>%s</section>'
+                    % (i, i, esc(h), ''.join('<p>%s</p>' % x for x in paras)) for i, (h, paras) in enumerate(G['parts'], 1))
+    body = ('<section class="phead" id="top" data-locus data-label="Disclaimer"><div class="wrap phead__in" data-reveal>%s%s'
+            '<p class="phead__lede">%s</p></div></section>\n'
+            '<section class="sect sect--flush" aria-label="Disclaimer"><div class="wrap"><div class="panel legal" data-reveal>%s</div></div></section>\n') % (
+        slabel(None, G['kicker']), heading(G['h1'], 'page-title', 'h1', 'h1'), esc(G['lede']), parts)
+    return shell('legal', '/legal', 'Disclaimer · ' + S['title'], G['description'], 'Disclaimer', body, base='/')
+
+
 # ----------------------------------------------------------------------------
 # data, vercel.json, sitemap, robots
 # ----------------------------------------------------------------------------
@@ -568,9 +592,11 @@ def vercel_json():
         'trailingSlash': False,
         # each build's short link hands off to the product, as a temporary redirect
         'redirects': [{'source': b['route'], 'destination': b['live'], 'permanent': False} for b in BUILDS],
+        'rewrites': [{'source': '/favicon.ico', 'destination': '/assets/img/favicon-32.png'}],
         'headers': [
             {'source': '/assets/fonts/(.*)', 'headers': [{'key': 'Cache-Control', 'value': 'public, max-age=31536000, immutable'}]},
-            {'source': '/assets/(css|js|img)/(.*)', 'headers': [{'key': 'Cache-Control', 'value': 'public, max-age=604800, must-revalidate'}]},
+            {'source': '/assets/(css|js)/(.*)', 'headers': [{'key': 'Cache-Control', 'value': 'public, max-age=31536000, immutable'}]},
+            {'source': '/assets/img/(.*)', 'headers': [{'key': 'Cache-Control', 'value': 'public, max-age=604800, must-revalidate'}]},
             {'source': '/(.*)', 'headers': [
                 {'key': 'X-Content-Type-Options', 'value': 'nosniff'},
                 {'key': 'Referrer-Policy', 'value': 'strict-origin-when-cross-origin'},
@@ -586,7 +612,8 @@ def vercel_json():
 
 def sitemap():
     return ('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-            '  <url><loc>%s/</loc><lastmod>%s</lastmod></url>\n</urlset>\n') % (DOM, LASTMOD)
+            '  <url><loc>%s/</loc><lastmod>%s</lastmod></url>\n  <url><loc>%s/legal</loc><lastmod>%s</lastmod></url>\n</urlset>\n') % (
+        DOM, LASTMOD, DOM, LASTMOD)
 
 
 def robots():
@@ -645,6 +672,7 @@ def main():
         V[key] = fingerprint(rel)
     written.append(write('index.html', home()))
     written.append(write('404.html', notfound()))
+    written.append(write('legal.html', legal()))
     written.append(write('vercel.json', vercel_json()))
     written.append(write('sitemap.xml', sitemap()))
     written.append(write('robots.txt', robots()))

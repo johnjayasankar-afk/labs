@@ -43,6 +43,7 @@
     get: function (k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
     set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
   };
+  if (store.get('jj:keys-learned', false)) root.classList.add('keys-on');
 
   /* shared state, declared up front because several modules read it */
   var locus = { current: null, until: 0 };
@@ -142,7 +143,7 @@
     addEventListener('resize', function () { if (window.innerWidth > 900 && !drawer.hidden) setDrawer(false); });
   }
 
-  var scrollQueued = false;
+  var scrollQueued = false, lastY = 0, goingUp = false;
   function onScroll() {
     if (scrollQueued) return;
     scrollQueued = true;
@@ -151,7 +152,11 @@
       var y = window.scrollY || 0, max = root.scrollHeight - window.innerHeight;
       if (hdr) hdr.classList.toggle('is-float', y > 24);
       if (scrollFill) scrollFill.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0).toFixed(4) + ')';
-      if (totop) totop.classList.toggle('is-on', y > window.innerHeight * 1.1);
+      if (totop) {
+        /* on a phone the button waits for a scroll back up, so it never sits on the text being read */
+        if (Math.abs(y - lastY) > 8) { goingUp = y < lastY; lastY = y; }
+        totop.classList.toggle('is-on', y > window.innerHeight * 1.1 && (goingUp || window.innerWidth > 760));
+      }
       for (var i = 0; i < spies.length; i++) spies[i]();
     });
   }
@@ -180,6 +185,8 @@
     function set(open) {
       item.classList.toggle('is-open', open);
       if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      /* the menu's picture loads the first time the menu opens, not with every page */
+      if (open) $$('img[data-src]', item).forEach(function (im) { im.src = im.getAttribute('data-src'); im.removeAttribute('data-src'); });
     }
     if (FINE) {
       item.addEventListener('mouseenter', function () { clearTimeout(timer); timer = setTimeout(function () { set(true); }, 70); });
@@ -236,7 +243,9 @@
     }
     var prev = null;
     for (var i = 0; i < trail.length; i++) {
-      if (trail[i].path !== herePath && Date.now() - trail[i].at < 14 * 864e5) { prev = trail[i]; break; }
+      /* only a page from an earlier visit counts: the page just left is what Back is for */
+      var age = Date.now() - trail[i].at;
+      if (trail[i].path !== herePath && age > 30 * 60e3 && age < 14 * 864e5) { prev = trail[i]; break; }
     }
     if (prev) {
       $$('[data-continue]').forEach(function (a) {
@@ -554,22 +563,48 @@
         tabs[cur].focus();
       });
     });
-    box.addEventListener('pointerenter', function () { hovered = true; });
-    box.addEventListener('pointerleave', function () { hovered = false; });
-    box.addEventListener('focusin', function () { focused = true; });
-    box.addEventListener('focusout', function (e) { if (!e.relatedTarget || !box.contains(e.relatedTarget)) focused = false; });
-    if (HAS_IO) new IntersectionObserver(function (en) { inView = en[0].isIntersecting; }, { threshold: .35 }).observe(box);
-    if (!auto) { box.classList.add('is-manual'); return; }
-    (function tick(now) {
-      if (!auto) return;
+    /* the clock only asks for frames while it is advancing, so a showcase that is hovered, scrolled away or in a hidden tab lets the page go idle */
+    var raf = 0;
+    function running() { return auto && !hovered && !focused && inView && !doc.hidden; }
+    function tick(now) {
+      raf = 0;
+      if (!running()) { last = 0; return; }
       var dt = last ? Math.min(100, now - last) : 0;
       last = now;
-      if (!hovered && !focused && inView && !doc.hidden) elapsed += dt;
+      elapsed += dt;
       var t = tabs[cur];
       if (elapsed >= DUR) select(cur + 1, false);
       else if (t) t.style.setProperty('--p', (elapsed / DUR).toFixed(4));
-      requestAnimationFrame(tick);
-    })(0);
+      raf = requestAnimationFrame(tick);
+    }
+    function wake() { if (!raf && running()) raf = requestAnimationFrame(tick); }
+    box.addEventListener('pointerenter', function () { hovered = true; });
+    box.addEventListener('pointerleave', function () { hovered = false; wake(); });
+    box.addEventListener('focusin', function () { focused = true; });
+    box.addEventListener('focusout', function (e) { if (!e.relatedTarget || !box.contains(e.relatedTarget)) { focused = false; wake(); } });
+    if (HAS_IO) new IntersectionObserver(function (en) { inView = en[0].isIntersecting; wake(); }, { threshold: .35 }).observe(box);
+    doc.addEventListener('visibilitychange', wake);
+    if (!auto) { box.classList.add('is-manual'); return; }
+    wake();
+  })();
+
+  /* ---- case pages: the section bar steps aside once the case is over ---- */
+  (function beatbarPast() {
+    var bar = $('.beatbar'), end = $('.closeout');
+    if (!bar || !end || !HAS_IO) return;
+    new IntersectionObserver(function (en) {
+      bar.classList.toggle('is-past', en[0].isIntersecting || en[0].boundingClientRect.top < 0);
+    }).observe(end);
+  })();
+
+  /* ---- primary actions: the rim of light travels only while the button is on screen ---- */
+  (function rims() {
+    var btns = $$('.btn--primary');
+    if (!btns.length || !HAS_IO || REDUCED) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { en.target.classList.toggle('is-away', !en.isIntersecting); });
+    });
+    btns.forEach(function (b) { io.observe(b); });
   })();
 
   /* ---- header: one highlight glides between the links under the pointer ---- */
@@ -650,6 +685,72 @@
         });
       });
       el.addEventListener('pointerleave', function () { el.classList.remove('is-spot'); });
+    });
+  })();
+
+  /* ---- the footer's bands unfold when it arrives ---------------------------- */
+  (function strata() {
+    var bands = $('.stripes--ftr');
+    if (!bands || REDUCED || !HAS_IO) return;
+    /* already on screen when the page opens: leave it as it is */
+    if (bands.getBoundingClientRect().top < (window.innerHeight || 800)) return;
+    bands.classList.add('is-folded');
+    var io = new IntersectionObserver(function (en) {
+      if (!en[0].isIntersecting) return;
+      io.disconnect();
+      bands.classList.remove('is-folded');
+    }, { rootMargin: '0px 0px -8% 0px' });
+    io.observe(bands);
+  })();
+
+  /* ---- page heads: the dot grid lights up around the pointer ---------------- */
+  (function gridLight() {
+    if (!FINE || REDUCED) return;
+    var R = 220, CELL = 24;
+    $$('.hero, .phead, .casehead').forEach(function (el) {
+      var box = doc.createElement('span'), lamp = doc.createElement('i'), raf = 0, cx = 0, cy = 0;
+      box.className = 'gridlight';
+      box.setAttribute('aria-hidden', 'true');
+      box.appendChild(lamp);
+      el.appendChild(box);
+      el.addEventListener('pointermove', function (e) {
+        cx = e.clientX;
+        cy = e.clientY;
+        if (raf) return;
+        raf = requestAnimationFrame(function () {
+          raf = 0;
+          var b = el.getBoundingClientRect();
+          /* the page's dots start at the top left of the document, 24px apart */
+          var left = cx + window.scrollX - R, top = cy + window.scrollY - R;
+          lamp.style.setProperty('--gl-x', (cx - b.left).toFixed(1) + 'px');
+          lamp.style.setProperty('--gl-y', (cy - b.top).toFixed(1) + 'px');
+          lamp.style.setProperty('--gl-bx', (-(left % CELL)).toFixed(2) + 'px');
+          lamp.style.setProperty('--gl-by', (-(top % CELL)).toFixed(2) + 'px');
+          el.classList.add('is-gridlit');
+        });
+      });
+      el.addEventListener('pointerleave', function () { el.classList.remove('is-gridlit'); });
+    });
+  })();
+
+  /* ---- the footer's big word catches the light ------------------------------ */
+  (function wordLight() {
+    if (!FINE || REDUCED) return;
+    $$('.ftr__word').forEach(function (word) {
+      var card = word.closest('.ftr__card') || word.parentNode, raf = 0, cx = 0, cy = 0;
+      card.addEventListener('pointermove', function (e) {
+        cx = e.clientX;
+        cy = e.clientY;
+        if (raf) return;
+        raf = requestAnimationFrame(function () {
+          raf = 0;
+          var b = word.getBoundingClientRect();
+          word.style.setProperty('--wx', (cx - b.left).toFixed(0) + 'px');
+          word.style.setProperty('--wy', (cy - b.top).toFixed(0) + 'px');
+          word.classList.toggle('is-lit', cy > b.top - 240 && cy < b.bottom + 60);
+        });
+      });
+      card.addEventListener('pointerleave', function () { word.classList.remove('is-lit'); });
     });
   })();
 
@@ -1026,7 +1127,7 @@
     setTimeout(function () { if (chipEl) { chipEl.hidden = true; store.set('jj:gchip', true); chipEl = null; } }, 15000);
   })();
   function dismissChip(learned) {
-    if (learned) store.set('jj:keys-learned', true);
+    if (learned) { store.set('jj:keys-learned', true); root.classList.add('keys-on'); }
     if (!chipEl) return;
     chipEl.hidden = true;
     store.set('jj:gchip', true);
@@ -1045,7 +1146,12 @@
       ['Copy a link to where you are', 'y', function () { copyLink(); }],
       ['Copy the email address', 'e', function () { copyEmail(); }],
       ['Back to top', 't · g g', toTop],
-      ['Clear the highlight', 'Esc', clearLocus]
+      ['Clear the highlight', 'Esc', clearLocus],
+      [store.get('jj:keys-off', false) ? 'Turn single-key shortcuts back on' : 'Turn off single-key shortcuts', '', function () {
+        var off = !store.get('jj:keys-off', false);
+        store.set('jj:keys-off', off);
+        toast(off ? 'Single-key shortcuts off. ' + MOD + ' still opens the palette.' : 'Single-key shortcuts on.');
+      }]
     ];
     if (page === 'case') k.push(['Previous or next system', '← →', null], ['Copy the case brief', 'b', copyBrief], ['Diagram phase, or jump to a beat', '1-9', null]);
     if (page === 'work') k.push(['Filter: all, agents, markets, labs', '1-4', null]);
@@ -1270,6 +1376,8 @@
       return;
     }
     if (k === 'Enter') { if (!onControl && openLocus()) e.preventDefault(); return; }
+    /* single-character shortcuts can be switched off from the palette (WCAG 2.1.4) */
+    if (k.length === 1 && store.get('jj:keys-off', false)) return;
     if (k === '/') { e.preventDefault(); openPal(''); return; }
     if (k === '?') { e.preventDefault(); openPal('?'); return; }
     if (page === 'case' && (k === '[' || k === ']' || ((k === 'ArrowLeft' || k === 'ArrowRight') && !onControl))) {

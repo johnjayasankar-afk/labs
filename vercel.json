@@ -43,6 +43,12 @@
       "permanent": false
     }
   ],
+  "rewrites": [
+    {
+      "source": "/favicon.ico",
+      "destination": "/assets/img/favicon-32.png"
+    }
+  ],
   "headers": [
     {
       "source": "/assets/fonts/(.*)",
@@ -54,7 +60,16 @@
       ]
     },
     {
-      "source": "/assets/(css|js|img)/(.*)",
+      "source": "/assets/(css|js)/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/assets/img/(.*)",
       "headers": [
         {
           "key": "Cache-Control",

@@ -20,11 +20,36 @@ SITE = dict(
     city='New York',
     year='2026',
     title='Labs · John Jayasankar',
-    description='Independent products John Jayasankar shipped: RideLens, Daylight, RailDrop, Gridiron, and other instruments.',
-    og_description='Independent products, shipped.',
+    description='Independent products John Jayasankar shipped: RideLens, Daylight, RailDrop, Gridiron, AgentFit, Cartonry, KeepFloor, and Pricing Hub.',
+    og_description='Eight independent products John Jayasankar built and shipped, including RideLens, Daylight, RailDrop, Gridiron, and AgentFit.',
     og_image='/assets/img/og.jpg',
     og_alt='Labs · John Jayasankar · independent products, shipped',
-    note='Independent products. Separate from the portfolio.',
+    note='Independent products, separate from the day job.',
+)
+
+# One line at the foot of every page; the full text is LEGAL, at /legal.
+LEGAL_LINE = ('Independent products, built on my own time with my own resources. '
+              'Not affiliated with or endorsed by any employer or any service named here.')
+
+LEGAL = dict(
+    kicker='Disclaimer',
+    h1=('Independent products.', 'Built on my own time.'),
+    lede='What Labs is, what it is not, and how to reach me about it.',
+    description='Labs is John Jayasankar’s personal project site: independent products built on his own time, not affiliated with any employer.',
+    parts=[
+        ('Independent work', ['Labs is my personal project site. I designed and built every product here independently, on my own '
+                              'time and with my own resources. None of them is a product of, or endorsed by, any company I work for '
+                              'or have worked for, and the opinions here are my own.']),
+        ('Names of other services', ['Services and brands named here, including Uber, Lyft, Empower, Curb, Amtrak, the NFL, ESPN, '
+                                     'DraftKings, Kalshi, Etsy, Apple, Google and Microsoft, belong to their owners. Their names are '
+                                     'used only to identify them, and no product here is affiliated with, sponsored by or endorsed by '
+                                     'any of them.']),
+        ('Data', ['Products show data from public and third-party sources. It can be delayed, incomplete or wrong.']),
+        ('Not advice', ['Nothing here is financial, investment, betting, legal or tax advice. Prices, fares and odds are shown for '
+                        'information only.']),
+        ('Corrections', ['If something here should be corrected or removed, email '
+                         '<a href="mailto:johnjayasankar@gmail.com">johnjayasankar@gmail.com</a>.']),
+    ],
 )
 
 BUILDS = [
@@ -51,7 +76,7 @@ BUILDS = [
     dict(
         slug='daylight', n='02', name='Daylight', cat='Native', tag='Native macOS', featured=True,
         line='Your screen, through the day.',
-        blurb='Warmth and brightness on a schedule you set - gradual, offline, and honest about what it is doing and why.',
+        blurb='Warmth and brightness on a schedule you set: gradual, offline, and honest about what it is doing and why.',
         does=['Shift warmth and brightness gradually on a schedule, or follow the sun',
               'Decide every control on one printed, six-layer ladder',
               'Read back after every write, and say so when another app took over'],
@@ -91,18 +116,18 @@ BUILDS = [
     dict(
         slug='gridiron', n='04', name='Gridiron', cat='Live data', tag='Live data', featured=True,
         line='Every game. Every drive. One view.',
-        blurb='A live NFL and college football command center: a 3D field for every game, with the reported ball spot, win probability and odds beside it.',
+        blurb='A live NFL and college football command center: a 3D field for every game, with the reported ball spot, win probability, and odds beside it.',
         does=['Follow every live NFL and college game, each on its own 3D field',
               'Draw only reported spots: the ball, the line of scrimmage, the line to gain',
-              'Put ESPN win probability, DraftKings lines and Kalshi prices beside the score'],
+              'Put ESPN win probability, DraftKings lines, and Kalshi prices beside the score'],
         stats=[('3', 'sources, each named'), ('0', 'guessed ball spots'), ('446', 'unit and integration tests')],
         rule='Reported, never guessed.',
-        rule_body='Every spot, clock and chance comes from a source that reported it. A missing ball spot says so; it is never guessed to midfield.',
+        rule_body='Every spot, clock, and chance comes from a source that reported it. A missing ball spot says so; it is never guessed to midfield.',
         words='Slate Drive Spot Chance Lines Touchdown',
         route='/gridiron', live='https://gridiron-pink-chi.vercel.app/', case='https://johnjayasankar.com/work/gridiron',
         bay=dict(title='Gridiron · football command center', sub='NFL Week 1 replay · ARI at LAC · captured real games',
                  big='6 → 1', big_sub='live games → one view',
-                 foot='Captured real games from Gridiron’s NFL Week 1 replay · figures as ESPN, DraftKings and Kalshi reported them · not betting advice'),
+                 foot='Captured real games from Gridiron’s NFL Week 1 replay · figures as ESPN, DraftKings, and Kalshi reported them · not betting advice'),
         phases=[('Slate', 'Replay of captured real games: six live at once, and Watch next names why ARI at LAC deserves attention.'),
                 ('Drive', 'Reported spots only: 10 plays and 65 yards to 2nd & Goal at the LAC 5, where the goal line is the line to gain.'),
                 ('Odds', 'Every chance is named: ESPN win probability LAC 70%, DraftKings closing lines, Kalshi LAC to win 73.5¢.'),
@@ -130,7 +155,7 @@ BUILDS = [
     ),
     dict(
         slug='cartonry', n='06', name='Cartonry', cat='Tool', tag='Tool', featured=False,
-        line='Packaging dielines - cut, crease, fold, cost.',
+        line='Packaging dielines: cut, crease, fold, cost.',
         blurb='Production-ready packaging dielines at any size. Export SVG, true-scale PDF, and DXF. Runs entirely in your browser.',
         does=['Enter the internal size, and the board allowances are added on top',
               'Eleven box styles, from shipping cases to tuck-end cartons and pillow boxes',
@@ -193,10 +218,10 @@ BUILDS = [
 HOME = dict(
     badge='Independent products · 2026',
     h1=('Instruments I shipped.', 'Built end-to-end. No demos.'),
-    lede='Consumer tools, pricing engines, a live football command center, and a model for when a workflow should get an agent.',
+    lede='Consumer tools, a native macOS app, a live football command center, pricing tools, and a model for when a workflow should get an agent.',
     meta=['08 live', '04 featured', 'New York'],
     # the hero showcase keeps the Labs site's own framing: range, one bench
-    show=[('consumer', '01 Consumer', 'ridelens'), ('native', '02 Native', 'daylight'), ('model', '03 Model', 'agentfit'), ('live', '04 Live data', 'gridiron')],
+    show=[('consumer', 'Consumer', 'ridelens'), ('native', 'Native', 'daylight'), ('model', 'Model', 'agentfit'), ('live', 'Live data', 'gridiron')],
     # the narrowest phones name the four tabs without their numbers
     show_short=dict(consumer='Consumer', native='Native', model='Model', live='Live'),
     proof=[('8', 'live builds on one bench', '#featured'),
