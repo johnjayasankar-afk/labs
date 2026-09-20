@@ -121,7 +121,7 @@
 
   /* ---- chrome --------------------------------------------------------------- */
   var hdr = $('[data-hdr]'), hdrBar = $('.hdr__bar'), beatbar = $('[data-beatbar]');
-  var scrollFill = $('[data-scrollbar]'), totop = $('[data-totop]');
+  var scrollFill = $('[data-scrollbar]'), totop = $('[data-totop]'), totopRing = totop ? $('.totop__ring circle', totop) : null;
   var menuBtn = $('[data-menu]'), drawer = $('[data-drawer]');
 
   /* how much of the top of the viewport the fixed chrome covers */
@@ -156,6 +156,7 @@
         /* on a phone the button waits for a scroll back up, so it never sits on the text being read */
         if (Math.abs(y - lastY) > 8) { goingUp = y < lastY; lastY = y; }
         totop.classList.toggle('is-on', y > window.innerHeight * 1.1 && (goingUp || window.innerWidth > 760));
+        if (totopRing) totopRing.style.strokeDashoffset = (100 - (max > 0 ? Math.min(1, y / max) : 0) * 100).toFixed(2);
       }
       for (var i = 0; i < spies.length; i++) spies[i]();
     });
@@ -690,17 +691,20 @@
 
   /* ---- the footer's bands unfold when it arrives ---------------------------- */
   (function strata() {
-    var bands = $('.stripes--ftr');
-    if (!bands || REDUCED || !HAS_IO) return;
-    /* already on screen when the page opens: leave it as it is */
-    if (bands.getBoundingClientRect().top < (window.innerHeight || 800)) return;
-    bands.classList.add('is-folded');
-    var io = new IntersectionObserver(function (en) {
-      if (!en[0].isIntersecting) return;
-      io.disconnect();
-      bands.classList.remove('is-folded');
-    }, { rootMargin: '0px 0px -8% 0px' });
-    io.observe(bands);
+    if (REDUCED || !HAS_IO) return;
+    var vh = window.innerHeight || 800;
+    /* the bands unfold, then the big word rises, each as it arrives; whatever is on screen at load stays put */
+    [['.stripes--ftr', 'is-folded'], ['.ftr__word', 'is-sunk']].forEach(function (p) {
+      var el = $(p[0]);
+      if (!el || el.getBoundingClientRect().top < vh) return;
+      el.classList.add(p[1]);
+      var io = new IntersectionObserver(function (en) {
+        if (!en[0].isIntersecting) return;
+        io.disconnect();
+        el.classList.remove(p[1]);
+      }, { rootMargin: '0px 0px -8% 0px' });
+      io.observe(el);
+    });
   })();
 
   /* ---- page heads: the dot grid lights up around the pointer ---------------- */
@@ -752,6 +756,137 @@
       });
       card.addEventListener('pointerleave', function () { word.classList.remove('is-lit'); });
     });
+  })();
+
+  /* ---- cards catch the light at their edge ----------------------------------- */
+  (function edges() {
+    if (!FINE || REDUCED) return;
+    var cards = $$('.fcard, .wrow, .nextcard, .tenet, .ncard__cover, .labcard, .proof__item > a, .exp, .alab, .early, .labindex__a, .rule, .labfeat__bay .bay');
+    if (!cards.length) return;
+    cards.forEach(function (c) { c.classList.add('edge'); });
+    var cur = null, raf = 0, px = 0, py = 0;
+    doc.addEventListener('pointermove', function (e) {
+      px = e.clientX;
+      py = e.clientY;
+      var t = e.target && e.target.closest ? e.target.closest('.edge') : null;
+      if (t !== cur) { if (cur) cur.classList.remove('is-edge'); cur = t; }
+      if (!cur || raf) return;
+      raf = requestAnimationFrame(function () {
+        raf = 0;
+        if (!cur) return;
+        var b = cur.getBoundingClientRect();
+        cur.style.setProperty('--ex', (px - b.left).toFixed(0) + 'px');
+        cur.style.setProperty('--ey', (py - b.top).toFixed(0) + 'px');
+        cur.classList.add('is-edge');
+      });
+    }, { passive: true });
+    doc.documentElement.addEventListener('pointerleave', function () { if (cur) cur.classList.remove('is-edge'); cur = null; });
+  })();
+
+  /* ---- a preview of the case rides beside the pointer ------------------------- */
+  (function peek() {
+    var hosts = $$('[data-peek]');
+    if (!hosts.length || !FINE || REDUCED) return;
+    var box = doc.createElement('div'), img = doc.createElement('img'), W = 288, H = 186;
+    box.className = 'peek';
+    box.setAttribute('aria-hidden', 'true');
+    img.alt = '';
+    img.decoding = 'async';
+    img.addEventListener('load', function () { H = box.offsetHeight || H; });
+    box.appendChild(img);
+    body.appendChild(box);
+    var x = 0, y = 0, tx = 0, ty = 0, ox = 24, tox = 24, raf = 0, on = false, warm = false;
+    function frame() {
+      raf = 0;
+      x += (tx - x) * .2;
+      y += (ty - y) * .2;
+      ox += (tox - ox) * .2;
+      var tilt = Math.max(-5, Math.min(5, (tx - x) * .06));
+      box.style.transform = 'translate3d(' + (x + ox).toFixed(1) + 'px,' + (y - H / 2).toFixed(1) + 'px,0) rotate(' + tilt.toFixed(2) + 'deg)';
+      if (on || Math.abs(tx - x) > .4 || Math.abs(ty - y) > .4 || Math.abs(tox - ox) > .4) raf = requestAnimationFrame(frame);
+    }
+    function aim(e) {
+      tx = e.clientX;
+      ty = e.clientY;
+      var flip = tx > window.innerWidth - W - 72;
+      tox = flip ? -(W + 24) : 24;
+      box.classList.toggle('is-flip', flip);
+      if (!raf) raf = requestAnimationFrame(frame);
+    }
+    hosts.forEach(function (h) {
+      h.addEventListener('pointerenter', function (e) {
+        if (!warm) { warm = true; hosts.forEach(function (o) { (new Image()).src = o.getAttribute('data-peek'); }); }
+        var src = h.getAttribute('data-peek');
+        if (img.getAttribute('src') !== src) img.src = src;
+        if (!box.classList.contains('is-on')) { x = e.clientX; y = e.clientY; }
+        on = true;
+        box.classList.add('is-on');
+        aim(e);
+      });
+      h.addEventListener('pointermove', aim);
+      h.addEventListener('pointerleave', function () { on = false; box.classList.remove('is-on'); });
+    });
+  })();
+
+  /* ---- the main buttons lean toward the pointer --------------------------------- */
+  (function magnets() {
+    if (!FINE || REDUCED) return;
+    $$('main .btn:not(.btn--sm), .ftr .btn').forEach(function (b) {
+      b.addEventListener('pointermove', function (e) {
+        var r = b.getBoundingClientRect();
+        var dx = Math.max(-5, Math.min(5, (e.clientX - r.left - r.width / 2) * .18));
+        var dy = Math.max(-4, Math.min(4, (e.clientY - r.top - r.height / 2) * .26));
+        b.style.translate = dx.toFixed(1) + 'px ' + dy.toFixed(1) + 'px';
+      });
+      b.addEventListener('pointerleave', function () { b.style.translate = ''; });
+    });
+  })();
+
+  /* ---- once, a band of light runs along the hero's quieter line ------------------ */
+  (function sheen() {
+    var line = $('.hero__line.tone');
+    if (!line || REDUCED) return;
+    var glow = line.cloneNode(true);
+    glow.className = 'hero__sheen';
+    glow.setAttribute('aria-hidden', 'true');
+    $$('[id]', glow).forEach(function (n) { n.removeAttribute('id'); });
+    line.appendChild(glow);
+    glow.addEventListener('animationend', function () { if (glow.parentNode) glow.parentNode.removeChild(glow); });
+    setTimeout(function () { glow.classList.add('is-go'); }, 1300);
+  })();
+
+  /* ---- wide screens: a rail of the page's sections ------------------------------ */
+  (function sectionRail() {
+    if (page === 'case' || page === 'simple') return;
+    var secs = $$('section[data-locus], [data-rail]').filter(function (s) { return labelOf(s) && s.getClientRects().length; });
+    if (secs.length < 4) return;
+    var nav = doc.createElement('nav'), marks = [], ftr = $('.ftr'), cur = -1;
+    nav.className = 'srail';
+    nav.setAttribute('aria-label', 'Sections');
+    secs.forEach(function (s) {
+      var b = doc.createElement('button'), tip = doc.createElement('span');
+      b.type = 'button';
+      b.className = 'srail__a';
+      b.setAttribute('aria-label', labelOf(s));
+      tip.textContent = labelOf(s);
+      tip.setAttribute('aria-hidden', 'true');
+      b.appendChild(doc.createElement('i'));
+      b.appendChild(tip);
+      b.addEventListener('click', function () { goTo(s, false); });
+      nav.appendChild(b);
+      marks.push(b);
+    });
+    body.appendChild(nav);
+    spies.push(function railSpy() {
+      var vh = window.innerHeight, y = window.scrollY || 0;
+      nav.classList.toggle('is-on', y > vh * .5 && (!ftr || ftr.getBoundingClientRect().top > vh * .55));
+      var line = headerOffset() + 60, pick = 0;
+      for (var i = 0; i < secs.length; i++) if (secs[i].getBoundingClientRect().top - line <= 0) pick = i;
+      if (pick === cur) return;
+      cur = pick;
+      marks.forEach(function (m, k) { if (k === pick) m.setAttribute('aria-current', 'true'); else m.removeAttribute('aria-current'); });
+    });
+    onScroll();
   })();
 
   /* ---- thumbnails: stories on cards play in view on the bays' shared clock --- */
@@ -1413,4 +1548,10 @@
   }
 
   onScroll();
+
+  try {
+    console.log('%cJohn Jayasankar · Labs%c  Independent products, built end to end · johnjayasankar.com',
+      'font: 600 13px/2 Inter, system-ui, sans-serif; color: #fff; background: #1a3a2a; padding: 3px 10px; border-radius: 999px;',
+      'font: 400 12px/2 Inter, system-ui, sans-serif; color: #3d5246;');
+  } catch (e) { /* no console */ }
 })();

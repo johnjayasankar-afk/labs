@@ -259,7 +259,7 @@ FOOTER = """<footer class="ftr">
 </footer>
 """
 
-TOTOP = '<button class="totop" type="button" data-totop aria-label="Back to top">%s</button>\n' % UP
+TOTOP = '<button class="totop" type="button" data-totop aria-label="Back to top">%s<svg class="totop__ring" viewBox="0 0 46 46" aria-hidden="true" focusable="false"><circle cx="23" cy="23" r="22" pathLength="100"/></svg></button>\n' % UP
 
 OVERLAYS = TOTOP + """<div class="toast" role="status" aria-live="polite" data-toast></div>
 <div class="gchip" data-gchip hidden><p data-gchip-text></p><button type="button" data-gchip-close>Got it</button></div>
