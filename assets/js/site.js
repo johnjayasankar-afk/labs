@@ -32,6 +32,10 @@
   var LINKS = JJ.links || {};
   var EMAIL = LINKS.email || 'johnjayasankar@gmail.com';
   var REDUCED = mq('(prefers-reduced-motion: reduce)');
+  /* one canvas answers whether this browser takes WebP, for the images fetched later */
+  var WEBP = (function () {
+    try { return doc.createElement('canvas').toDataURL('image/webp').indexOf('data:image/webp') === 0; } catch (e) { return false; }
+  })();
   var FINE = mq('(pointer: fine)');
   var IS_MAC = /Mac|iPhone|iPad|iPod/.test(navigator.platform || '') || /Mac OS X/.test(navigator.userAgent || '');
   var MOD = IS_MAC ? '⌘K' : 'Ctrl K';
@@ -123,6 +127,8 @@
   var hdr = $('[data-hdr]'), hdrBar = $('.hdr__bar'), beatbar = $('[data-beatbar]');
   var scrollFill = $('[data-scrollbar]'), totop = $('[data-totop]'), totopRing = totop ? $('.totop__ring circle', totop) : null;
   var menuBtn = $('[data-menu]'), drawer = $('[data-drawer]');
+  /* the hero's light and its dark stage drift slower than the page, which reads as depth */
+  var depth = REDUCED ? null : $('.hero');
 
   /* how much of the top of the viewport the fixed chrome covers */
   function headerOffset() {
@@ -152,6 +158,7 @@
       var y = window.scrollY || 0, max = root.scrollHeight - window.innerHeight;
       if (hdr) hdr.classList.toggle('is-float', y > 24);
       if (scrollFill) scrollFill.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0).toFixed(4) + ')';
+      if (depth) { var p = Math.min(1, y / 900); depth.style.setProperty('--pz', (p * 34).toFixed(1) + 'px'); depth.style.setProperty('--pz2', (p * -16).toFixed(1) + 'px'); }
       if (totop) {
         /* on a phone the button waits for a scroll back up, so it never sits on the text being read */
         if (Math.abs(y - lastY) > 8) { goingUp = y < lastY; lastY = y; }
@@ -187,7 +194,11 @@
       item.classList.toggle('is-open', open);
       if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
       /* the menu's picture loads the first time the menu opens, not with every page */
-      if (open) $$('img[data-src]', item).forEach(function (im) { im.src = im.getAttribute('data-src'); im.removeAttribute('data-src'); });
+      /* the menu's picture is fetched when the menu opens, in WebP where the browser takes it */
+      if (open) $$('img[data-src]', item).forEach(function (im) {
+        im.src = (WEBP && im.getAttribute('data-srcw')) || im.getAttribute('data-src');
+        im.removeAttribute('data-src');
+      });
     }
     if (FINE) {
       item.addEventListener('mouseenter', function () { clearTimeout(timer); timer = setTimeout(function () { set(true); }, 70); });
@@ -265,17 +276,100 @@
   function placeSeg(seg) {
     var ind = $('.seg__ind', seg), on = $('[aria-pressed="true"], [aria-selected="true"]', seg);
     if (!ind || !on || !on.offsetWidth) return;
+    var to = 'translateX(' + on.offsetLeft + 'px)';
+    if (seg.classList.contains('is-ready') && ind.style.transform !== to) {
+      seg.classList.add('is-sliding');
+      clearTimeout(seg.__slide);
+      seg.__slide = setTimeout(function () { seg.classList.remove('is-sliding'); }, 420);
+    }
     ind.style.width = on.offsetWidth + 'px';
-    ind.style.transform = 'translateX(' + on.offsetLeft + 'px)';
+    ind.style.transform = to;
     if (!seg.classList.contains('is-ready')) requestAnimationFrame(function () { seg.classList.add('is-ready'); });
   }
   var segs = $$('[data-seg]');
   function placeSegs() { segs.forEach(placeSeg); }
-  placeSegs();
+  /*
+   * Placed after the first paint. Each indicator is measured from its selected
+   * button's offsetLeft and offsetWidth, which forces a layout, and doing that
+   * for every control on the page before anything had been drawn was the
+   * largest remaining thing between the Labs home page and its first paint.
+   * The indicator only animates once its control has `is-ready`, which is set
+   * a frame after the first placement, so arriving a frame later costs nothing.
+   */
+  requestAnimationFrame(function () { requestAnimationFrame(placeSegs); });
   addEventListener('resize', placeSegs);
   if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(placeSegs);
 
+  /* ---- headings arrive one word after another -------------------------------- */
+  (function heads() {
+    if (REDUCED) return;
+    var vh = window.innerHeight || 800;
+    /* an arrow, and the reading of it, stay glued to the word they belong to */
+    function glued(n) { return n.classList.contains('to') || n.classList.contains('sr-only') || n.tagName === 'I' || n.tagName === 'SVG'; }
+    function split(el, seed) {
+      var i = seed;
+      (function walk(node) {
+        var kids = [].slice.call(node.childNodes), frag = doc.createDocumentFragment(), cur = null;
+        function word() {
+          if (!cur) {
+            cur = doc.createElement('span');
+            cur.className = 'wd';
+            cur.style.setProperty('--wd', Math.min(i++, 14));
+            frag.appendChild(cur);
+          }
+          return cur;
+        }
+        kids.forEach(function (n) {
+          if (n.nodeType === 3) {
+            /* split on spaces but never on a no-break space, which is there to hold a pair together */
+            n.textContent.split(/([^\S\u00a0]+)/).forEach(function (p) {
+              if (!p) return;
+              if (/^[^\S\u00a0]+$/.test(p)) { cur = null; frag.appendChild(doc.createTextNode(p)); return; }
+              word().appendChild(doc.createTextNode(p));
+            });
+          } else if (n.nodeType === 1 && glued(n)) {
+            word().appendChild(n);
+          } else if (n.nodeType === 1 && n.tagName !== 'BR') {
+            walk(n); frag.appendChild(n); cur = null;
+          } else { frag.appendChild(n); cur = null; }
+        });
+        /* the text nodes were copied into words, so clear what is left before putting the words back */
+        while (node.firstChild) node.removeChild(node.firstChild);
+        node.appendChild(frag);
+      })(el);
+      return i;
+    }
+    /*
+     * Every heading is measured before any of them is split.
+     *
+     * Splitting rewrites a heading's children and then asked that same heading
+     * where it was, which makes the browser lay the page out again, once per
+     * heading: on the Labs home page that was 94ms of the time before the first
+     * paint. Nothing here moves a heading, so where they all are can be read in
+     * one pass and used in the next.
+     */
+    var heads = $$('.shead .h2, .phead .h1, .phead .h2, .labfeat__h, .casehead__h').filter(function (h) {
+      var n = (h.textContent || '').trim().split(/\s+/).length;
+      return n >= 2 && n <= 26;
+    });
+    var onScreen = heads.map(function (h) {
+      var r = h.getBoundingClientRect();
+      return r.top < vh && r.bottom > 0;
+    });
+    heads.forEach(function (h, i) {
+      split(h, 0);
+      h.classList.add(onScreen[i] ? 'wds--load' : 'wds');
+    });
+  })();
+
   /* ---- reveal: blocks rise into place the first time they arrive ------------ */
+  (function cascade() {
+    /* a grid arrives one card after another, left to right */
+    $$('.fgrid, .lrows, .ncards, .labgrid, .inst__grid, .labindex, .tenets, .earlier__list').forEach(function (grid) {
+      $$('[data-reveal]', grid).forEach(function (el, i) { if (!el.style.getPropertyValue('--rd')) el.style.setProperty('--rd', Math.min(i, 5)); });
+    });
+  })();
+
   (function reveal() {
     var els = $$('[data-reveal]');
     if (!els.length) return;
@@ -815,8 +909,10 @@
     }
     hosts.forEach(function (h) {
       h.addEventListener('pointerenter', function (e) {
-        if (!warm) { warm = true; hosts.forEach(function (o) { (new Image()).src = o.getAttribute('data-peek'); }); }
-        var src = h.getAttribute('data-peek');
+        /* WebP where the browser takes it, the JPEG where it does not */
+        function peekSrc(o) { return (WEBP && o.getAttribute('data-peekw')) || o.getAttribute('data-peek'); }
+        if (!warm) { warm = true; hosts.forEach(function (o) { (new Image()).src = peekSrc(o); }); }
+        var src = peekSrc(h);
         if (img.getAttribute('src') !== src) img.src = src;
         if (!box.classList.contains('is-on')) { x = e.clientX; y = e.clientY; }
         on = true;
@@ -884,7 +980,14 @@
       for (var i = 0; i < secs.length; i++) if (secs[i].getBoundingClientRect().top - line <= 0) pick = i;
       if (pick === cur) return;
       cur = pick;
-      marks.forEach(function (m, k) { if (k === pick) m.setAttribute('aria-current', 'true'); else m.removeAttribute('aria-current'); });
+      marks.forEach(function (m, k) {
+        if (k !== pick) { m.removeAttribute('aria-current'); m.classList.remove('is-pop'); return; }
+        m.setAttribute('aria-current', 'true');
+        if (REDUCED) return;
+        m.classList.remove('is-pop');
+        void m.offsetWidth;
+        m.classList.add('is-pop');
+      });
     });
     onScroll();
   })();
@@ -1548,6 +1651,207 @@
   }
 
   onScroll();
+
+  /* ---- liquid glass: an SVG lens bends the page at the rim of every glass surface ---- */
+  (function glass() {
+    var brands = navigator.userAgentData && navigator.userAgentData.brands;
+    var LENS = !!(brands && brands.some(function (b) { return /Chromium/.test(b.brand); })) && !mq('(prefers-reduced-transparency: reduce)');
+    var NS = 'http://www.w3.org/2000/svg', defs = null, cache = {}, seq = 0;
+    /* surface, tints, and the lens numbers: bezel width, refraction, blur, saturation */
+    var PARTS = [
+      { sel: '.hdr__bar', spec: 1, tone: 1, lens: [13, 52, 9, 1.95] },
+      { sel: '.show', lens: [20, 55, 8, 1.75] },
+      { sel: '.badge', spec: 1, lens: [9, 29, 5, 1.8] },
+      { sel: '.caseside__card', lens: [12, 34, 8, 1.7] },
+      { sel: '.nextcard', spec: 1, lens: [14, 39, 9, 1.7] },
+      { sel: '.embed__bar', lens: [10, 26, 8, 1.7] },
+      { sel: '.labfeat__bay .bay--compact', lens: [16, 42, 8, 1.7] },
+      { sel: '.seg__ind', dome: 1, lens: [10, 26, 2, 1.8] },
+      { sel: '.menu', spec: 1, dome: 1, lens: [16, 34, 4, 1.8] },
+      { sel: '.rule', flat: 1, mint: 1 },
+      { sel: '.mq__item', flat: 1 },
+      { sel: '.chips li', flat: 1 },
+      { sel: '.casechip', flat: 1 },
+      { sel: '.casehead__metrics .stat', flat: 1 },
+      { sel: '.beatbar__in', spec: 1, lens: [12, 44, 9, 1.95] },
+      { sel: '.drawer', spec: 1, overlay: 1, lens: [16, 55, 12, 1.8] },
+      { sel: '.mega', spec: 1, overlay: 1, lens: [16, 57, 12, 1.8] },
+      { sel: '.cmdk__panel', spec: 1, overlay: 1, lens: [18, 60, 14, 1.7] },
+      { sel: '.srail', spec: 1, tone: 1, lens: [9, 31, 3, 1.8] },
+      { sel: '.totop', spec: 1, tone: 1, dome: 1, lens: [16, 39, 3, 1.8] },
+      { sel: '.gchip', spec: 1, lens: [11, 39, 8, 1.8] },
+      { sel: '.toast', spec: 1, dark: 1, lens: [11, 36, 8, 1.6] },
+      { sel: '.peek', spec: 1, lens: [14, 47, 2, 1.7] },
+      { sel: '.seg', spec: 1, lens: [8, 23, 4, 1.7] },
+      { sel: '.kbtn', spec: 1, dome: 1, lens: [12, 29, 4, 1.8] },
+      { sel: '.btn--ghost', spec: 1 },
+      { sel: '.labcard', dark: 1, lens: [14, 39, 10, 1.5] },
+      { sel: '.proof__item > a', dark: 1, lens: [12, 34, 10, 1.5] },
+      { sel: '.inst__item', lens: [12, 34, 8, 1.7] },
+      { sel: '.labindex__a', spec: 1 },
+      { sel: '.visit', dark: 1 }
+    ];
+    function svgNode(tag, attrs, parent) {
+      var n = doc.createElementNS(NS, tag);
+      for (var k in attrs) n.setAttribute(k, attrs[k]);
+      if (parent) parent.appendChild(n);
+      return n;
+    }
+    /* a rounded rectangle seen as a lens: the rim bends light inward, the middle is flat */
+    function lensMap(w, h, r, bezel) {
+      var c = doc.createElement('canvas');
+      c.width = w;
+      c.height = h;
+      var ctx = c.getContext('2d'), img = ctx.createImageData(w, h), d = img.data;
+      var cx = w / 2, cy = h / 2, ax = Math.max(0, w / 2 - r), ay = Math.max(0, h / 2 - r);
+      for (var y = 0; y < h; y++) {
+        for (var x = 0; x < w; x++) {
+          var px = x + .5 - cx, py = y + .5 - cy, qx = Math.abs(px) - ax, qy = Math.abs(py) - ay;
+          var ox = Math.max(qx, 0), oy = Math.max(qy, 0);
+          var inside = -(Math.sqrt(ox * ox + oy * oy) + Math.min(Math.max(qx, qy), 0) - r);
+          var nx = 0, ny = 0;
+          if (qx > 0 && qy > 0) { var l = Math.sqrt(qx * qx + qy * qy) || 1; nx = qx / l * (px < 0 ? -1 : 1); ny = qy / l * (py < 0 ? -1 : 1); }
+          else if (qx > qy) nx = px < 0 ? -1 : 1;
+          else ny = py < 0 ? -1 : 1;
+          /* a spherical bevel: light bends hardest at the very rim, then eases off */
+          var t = Math.min(1, Math.max(0, inside / bezel)), u = 1 - t;
+          var m = inside <= 0 ? 0 : Math.min(1, .55 * u / Math.sqrt(Math.max(1e-3, 1 - u * u)));
+          var i = (y * w + x) * 4;
+          d[i] = 128 - nx * m * 127;
+          d[i + 1] = 128 - ny * m * 127;
+          d[i + 2] = 128;
+          d[i + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      return c.toDataURL();
+    }
+    function filterFor(w, h, r, cfg) {
+      var key = [w, h, r, cfg[0], cfg[1], cfg[2], cfg[3]].join('_');
+      if (cache[key]) return cache[key];
+      if (!defs) {
+        var svg = svgNode('svg', { width: 0, height: 0, 'aria-hidden': 'true' }, body);
+        svg.style.position = 'absolute';
+        defs = svgNode('defs', {}, svg);
+      }
+      /* the map is built at a smaller size and stretched back: the rim is smooth either way */
+      var s = Math.min(1, 460 / Math.max(w, h)), mw = Math.max(8, Math.round(w * s)), mh = Math.max(8, Math.round(h * s));
+      var id = 'gl-' + (++seq);
+      var f = svgNode('filter', { id: id, x: 0, y: 0, width: w, height: h, filterUnits: 'userSpaceOnUse', primitiveUnits: 'userSpaceOnUse', 'color-interpolation-filters': 'sRGB' }, defs);
+      svgNode('feGaussianBlur', { 'in': 'SourceGraphic', stdDeviation: cfg[2], result: 'soft' }, f);
+      svgNode('feImage', { href: lensMap(mw, mh, r * s, cfg[0] * s), x: 0, y: 0, width: w, height: h, preserveAspectRatio: 'none', result: 'lens' }, f);
+      if (w * h > 150000) {
+        /* one pass on a large pane: three would cost a frame on every scroll */
+        svgNode('feDisplacementMap', { 'in': 'soft', in2: 'lens', scale: cfg[1], xChannelSelector: 'R', yChannelSelector: 'G', result: 'one' }, f);
+        svgNode('feColorMatrix', { 'in': 'one', type: 'saturate', values: cfg[3] }, f);
+        cache[key] = id;
+        return id;
+      }
+      /* three passes, one per channel, so the rim carries a hint of colour like real glass */
+      [['r', 1, '1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0'], ['g', .91, '0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0'], ['b', .82, '0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0']].forEach(function (ch) {
+        svgNode('feDisplacementMap', { 'in': 'soft', in2: 'lens', scale: cfg[1] * ch[1], xChannelSelector: 'R', yChannelSelector: 'G', result: 'd' + ch[0] }, f);
+        svgNode('feColorMatrix', { 'in': 'd' + ch[0], type: 'matrix', values: ch[2], result: ch[0] }, f);
+      });
+      svgNode('feComposite', { 'in': 'r', in2: 'g', operator: 'arithmetic', k2: 1, k3: 1, result: 'rg' }, f);
+      svgNode('feComposite', { 'in': 'rg', in2: 'b', operator: 'arithmetic', k2: 1, k3: 1, result: 'rgb' }, f);
+      svgNode('feColorMatrix', { 'in': 'rgb', type: 'saturate', values: cfg[3] }, f);
+      cache[key] = id;
+      return id;
+    }
+    var panes = [], lensJobs = [];
+    PARTS.forEach(function (part) {
+      $$(part.sel).forEach(function (el) {
+        el.classList.add(part.flat ? 'gl--flat' : 'gl');
+        if (part.dark) el.classList.add('gl--dark');
+        if (part.mint) el.classList.add('gl--mint');
+        if (part.spec && !REDUCED) el.classList.add('gl--spec');
+        panes.push({ el: el, part: part });
+        if (!LENS || !part.lens) return;
+        var timer = 0, last = '';
+        var fit = function () {
+          /* sizes are rounded so a morphing bar reuses one lens instead of building a new one each step */
+          var b = el.getBoundingClientRect(), w = Math.round(b.width / 4) * 4, h = Math.round(b.height / 2) * 2;
+          if (w < 24 || h < 16) return;
+          var r = Math.min(parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0, w / 2, h / 2);
+          var key = w + 'x' + h + 'x' + Math.round(r);
+          if (key === last) return;
+          last = key;
+          /* a round control is all lens: the dome runs from the rim to the middle */
+          if (w * h > 420000 && !part.overlay) { el.classList.remove('gl-on'); return; }   /* frosted glass instead: a pane this big cannot carry a lens per frame */
+          var cfg = part.dome ? [Math.min(h, w) / 2, part.lens[1], part.lens[2], part.lens[3]] : part.lens;
+          el.style.setProperty('--lg', 'url(#' + filterFor(w, h, r, cfg) + ')');
+          el.classList.add('gl-on');
+        };
+        if ('ResizeObserver' in window) new ResizeObserver(function () { clearTimeout(timer); timer = setTimeout(fit, 170); }).observe(el);
+        lensJobs.push(fit);
+        /* off screen, the lens is switched off: no backdrop work for glass nobody can see */
+        if (HAS_IO && !part.overlay) {
+          new IntersectionObserver(function (en) {
+            if (!el.style.getPropertyValue('--lg')) return;
+            el.classList.toggle('gl-on', en[0].isIntersecting);
+          }, { rootMargin: '120px' }).observe(el);
+        }
+      });
+    });
+    /*
+     * The lenses are built after the first paint, a few milliseconds at a time.
+     *
+     * Each one draws a displacement map pixel by pixel and reads it back as a
+     * data URL, and building them all inline with the rest of the setup was the
+     * largest single thing standing between this page and its first paint.
+     * Glass is frosted until its lens arrives, which is what a browser without
+     * the filter shows anyway, so nothing is missing in the meantime.
+     */
+    if (lensJobs.length) {
+      var nextJob = 0;
+      var buildLenses = function (deadline) {
+        var started = performance.now();
+        while (nextJob < lensJobs.length) {
+          lensJobs[nextJob++]();
+          if (performance.now() - started > 8 || (deadline && deadline.timeRemaining && deadline.timeRemaining() < 4)) break;
+        }
+        if (nextJob < lensJobs.length) schedule();
+      };
+      var schedule = function () {
+        if (window.requestIdleCallback) window.requestIdleCallback(buildLenses, { timeout: 500 });
+        else setTimeout(buildLenses, 0);
+      };
+      requestAnimationFrame(function () { requestAnimationFrame(schedule); });
+    }
+    if (!panes.length) return;
+    /* the highlight follows the pointer across the glass */
+    if (FINE && !REDUCED) {
+      var raf = 0, mx = 0, my = 0, lit = null;
+      doc.addEventListener('pointermove', function (e) {
+        mx = e.clientX;
+        my = e.clientY;
+        var t = e.target && e.target.closest ? e.target.closest('.gl--spec') : null;
+        lit = t;
+        if (!lit || raf) return;
+        raf = requestAnimationFrame(function () {
+          raf = 0;
+          if (!lit) return;
+          var b = lit.getBoundingClientRect();
+          lit.style.setProperty('--gx', (mx - b.left).toFixed(0) + 'px');
+          lit.style.setProperty('--gy', (my - b.top).toFixed(0) + 'px');
+        });
+      }, { passive: true });
+    }
+    /* chrome over the dark bands takes the dark tint */
+    var tone = panes.filter(function (p) { return p.part.tone; });
+    var hdrEl = $('[data-hdr]'), darks = $$('.labsband__card, .ftr__card, .inst, .contact__l, .visit');
+    if (!tone.length || !darks.length) return;
+    spies.push(function glassTone() {
+      var rects = darks.map(function (d) { return d.getBoundingClientRect(); });
+      tone.forEach(function (p) {
+        var b = p.el.getBoundingClientRect(), mid = b.top + b.height / 2, dark = false;
+        for (var i = 0; i < rects.length && !dark; i++) dark = rects[i].top < mid && rects[i].bottom > mid;
+        p.el.classList.toggle('gl--dark', dark);
+        if (p.el === $('.hdr__bar') && hdrEl) hdrEl.classList.toggle('is-over-dark', dark);
+      });
+    });
+    onScroll();
+  })();
 
   try {
     console.log('%cJohn Jayasankar · Labs%c  Independent products, built end to end · johnjayasankar.com',

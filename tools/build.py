@@ -38,7 +38,9 @@ BY = {b['slug']: b for b in BUILDS}
 FEATURED = [b for b in BUILDS if b['featured']]
 ALSO = [b for b in BUILDS if not b['featured']]
 ROUTES = {b['route'] for b in BUILDS}
-LASTMOD = '2026-09-16'
+# The day the site was last built, which is the day its content last changed.
+# Set LASTMOD in the environment to pin it (a rebuild that changes nothing).
+LASTMOD = os.environ.get('LASTMOD') or __import__('datetime').date.today().isoformat()
 UPDATED = __import__('datetime').date.fromisoformat(LASTMOD).strftime('%B %Y')
 NEWTAB = '<span class="sr-only"> (opens in a new tab)</span>'
 V = {}
@@ -210,8 +212,10 @@ HEAD = """<!doctype html>
 <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/assets/img/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
 <noscript><style>.hdr__bar { background: rgba(248, 246, 241, .94); }</style></noscript>
 <link rel="preload" href="/assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/css/site.css?v={{v}}">
 {{ld}}</head>
 """
@@ -287,9 +291,10 @@ def mega(base):
     lead = ('<div class="mega__lead"><p class="mega__h">Overview</p>'
             '<a class="mega__big" href="%s#featured"><span>All builds</span><small>%02d live · %02d featured</small></a>'
             '<a class="mega__big" href="%s#rules"><span>What they share</span><small>The rule each build keeps</small></a>'
-            '<a class="mega__card" href="%s" target="_blank" rel="noopener"><img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="%s" alt="" width="640" height="400" decoding="async">'
+            '<a class="mega__card" href="%s" target="_blank" rel="noopener"><img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="%s" data-srcw="%s" alt="" width="640" height="400" decoding="async">'
             '<span class="mega__card-t">Portfolio</span><small>Case studies for the featured builds</small>%s</a></div>') % (
-        base, len(BUILDS), len(FEATURED), base, esc(S['portfolio']), img_v('assets/img/portfolio.jpg'), NEWTAB)
+        base, len(BUILDS), len(FEATURED), base, esc(S['portfolio']), img_v('assets/img/portfolio.jpg'),
+        webp_of(img_v('assets/img/portfolio.jpg')) or '', NEWTAB)
     return ('<div class="mega mega--labs" id="mega-builds" data-mega-panel><div class="mega__grid mega__grid--labs">%s%s%s</div></div>'
             % (lead, col('Featured', FEATURED), col('Also shipped', ALSO)))
 
@@ -537,6 +542,7 @@ def home():
 
     body = hero + featured + also + shared + visit
     ld = {'@context': 'https://schema.org', '@type': 'CollectionPage', 'name': S['title'], 'url': DOM + '/', 'description': S['description'],
+          'inLanguage': 'en-US', 'dateModified': LASTMOD,
           'author': {'@type': 'Person', 'name': S['name'], 'url': S['portfolio']},
           'hasPart': [{'@type': 'CreativeWork', 'name': b['name'], 'description': b['line'], 'url': b['live']} for b in BUILDS]}
     return shell('labs', '/', S['title'], S['description'], 'Labs', body, ld=ld)
@@ -616,8 +622,52 @@ def sitemap():
         DOM, LASTMOD, DOM, LASTMOD)
 
 
+def webp_of(url):
+    """The WebP beside a JPEG, when one has been made for it."""
+    rel = url.split('?')[0].lstrip('/')
+    alt = rel[:-4] + '.webp'
+    return img_v(alt) if rel.endswith('.jpg') and os.path.isfile(os.path.join(ROOT, alt)) else None
+
+
 def robots():
     return 'User-agent: *\nAllow: /\n\nSitemap: %s/sitemap.xml\n' % DOM
+
+
+def manifest():
+    """Installable, with the site's own icon and ground colour."""
+    import json as _json
+    return _json.dumps({
+        'name': S['title'], 'short_name': 'Labs', 'description': S['description'],
+        'start_url': '/', 'scope': '/', 'display': 'standalone', 'id': '/',
+        'background_color': '#f8f6f1', 'theme_color': '#f8f6f1', 'lang': 'en-US', 'dir': 'ltr',
+        'icons': [
+            {'src': '/assets/img/icon-192.png', 'sizes': '192x192', 'type': 'image/png', 'purpose': 'any'},
+            {'src': '/assets/img/icon-512.png', 'sizes': '512x512', 'type': 'image/png', 'purpose': 'any'},
+            {'src': '/assets/img/icon-512.png', 'sizes': '512x512', 'type': 'image/png', 'purpose': 'maskable'},
+            {'src': '/assets/img/favicon.svg', 'sizes': 'any', 'type': 'image/svg+xml'},
+        ],
+    }, ensure_ascii=False, indent=2) + '\n'
+
+
+def security_txt():
+    """RFC 9116. Expires a year out, which is the point of the field."""
+    d = __import__('datetime').date.fromisoformat(LASTMOD)
+    return ('Contact: mailto:%s\n'
+            'Expires: %sT00:00:00.000Z\n'
+            'Preferred-Languages: en\n'
+            'Canonical: %s/.well-known/security.txt\n' % (EMAIL, d.replace(year=d.year + 1).isoformat(), DOM))
+
+
+def llms_txt():
+    """A map of the site for a reader that arrives without a browser."""
+    rows = '\n'.join('- [%s](%s): %s' % (b['name'], b['live'], b['line']) for b in BUILDS)
+    return ('# %s\n\n> %s\n\n'
+            'One page of static HTML, readable without JavaScript. Each build below links to\n'
+            'the live product; the case studies live on the portfolio.\n\n'
+            '## Builds\n\n%s\n\n'
+            '## Elsewhere\n\n- [Portfolio](%s): the case studies, and the work done inside a company.\n'
+            '- [Disclaimer](%s/legal): whose views these are.\n- Contact: %s\n'
+            % (S['title'], S['description'], rows, S['portfolio'], DOM, EMAIL))
 
 
 # ----------------------------------------------------------------------------
@@ -676,6 +726,9 @@ def main():
     written.append(write('vercel.json', vercel_json()))
     written.append(write('sitemap.xml', sitemap()))
     written.append(write('robots.txt', robots()))
+    written.append(write('site.webmanifest', manifest()))
+    written.append(write('llms.txt', llms_txt()))
+    written.append(write('.well-known/security.txt', security_txt()))
     problems = check(written)
     if problems:
         for p in problems:

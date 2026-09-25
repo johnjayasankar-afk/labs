@@ -120,7 +120,7 @@ BUILDS = [
         does=['Follow every live NFL and college game, each on its own 3D field',
               'Draw only reported spots: the ball, the line of scrimmage, the line to gain',
               'Put ESPN win probability, DraftKings lines, and Kalshi prices beside the score'],
-        stats=[('3', 'sources, each named'), ('0', 'guessed ball spots'), ('446', 'unit and integration tests')],
+        stats=[('3', 'sources, each named'), ('0', 'guessed ball spots'), ('634', 'unit and integration tests')],
         rule='Reported, never guessed.',
         rule_body='Every spot, clock, and chance comes from a source that reported it. A missing ball spot says so; it is never guessed to midfield.',
         words='Slate Drive Spot Chance Lines Touchdown',

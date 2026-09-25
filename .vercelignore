@@ -1,0 +1,8 @@
+# Kept in the repo but not published: build tools, notes and dev pages.
+tools/
+README.md
+set-domain.sh
+_og.html
+_stories.html
+_stories.js
+.DS_Store

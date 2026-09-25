@@ -1,0 +1,23 @@
+# Labs · John Jayasankar
+
+> Independent products John Jayasankar shipped: RideLens, Daylight, RailDrop, Gridiron, AgentFit, Cartonry, KeepFloor, and Pricing Hub.
+
+One page of static HTML, readable without JavaScript. Each build below links to
+the live product; the case studies live on the portfolio.
+
+## Builds
+
+- [RideLens](https://ride-lens2.vercel.app/): Every ride, one comparison.
+- [Daylight](https://daylight-app-wine.vercel.app/): Your screen, through the day.
+- [RailDrop](https://rail-drop3.vercel.app/): Know when your train gets cheaper.
+- [Gridiron](https://gridiron-pink-chi.vercel.app/): Every game. Every drive. One view.
+- [AgentFit](https://agent-fit2.vercel.app/): When should a workflow get an agent?
+- [Cartonry](https://cartonry.vercel.app/): Packaging dielines: cut, crease, fold, cost.
+- [KeepFloor](https://keep-floor.vercel.app/): The Etsy list price that still pays you.
+- [Pricing Hub](https://pricing-hub-seven.vercel.app/): Contractor job costing, estimate to invoice.
+
+## Elsewhere
+
+- [Portfolio](https://johnjayasankar.com/): the case studies, and the work done inside a company.
+- [Disclaimer](https://labs.johnjayasankar.com/legal): whose views these are.
+- Contact: johnjayasankar@gmail.com
