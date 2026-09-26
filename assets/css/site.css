@@ -109,6 +109,7 @@ body.is-locked { overflow: hidden; }
 .slabel--dark .slabel__t::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 3Q2.5 .6 5 3T10 3' fill='none' stroke='%236ee7b7' stroke-width='1.4'/%3E%3C/svg%3E"); }
 .hint { font: 400 12.5px/1.5 var(--mono); letter-spacing: 0; color: var(--ink-3); }
 /* inline shortcut hints stay out of a first visit; they show once someone has used the keyboard */
+.hint--prov { max-width: 62ch; margin-inline: auto; text-align: center; }
 .hint[data-kbd] { display: none; }
 html.keys-on .hint[data-kbd], .phead--nf .hint[data-kbd] { display: block; }
 .sep { margin: 0 10px; color: var(--ink-3); }

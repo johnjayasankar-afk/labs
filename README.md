@@ -111,7 +111,8 @@ assets/js/site.js             the portfolio's script: header and Builds menu, re
 assets/js/labs-data.js        generated palette index
 assets/fonts/                 Inter (variable), IBM Plex Mono 400/500
 assets/img/                   favicon, og.jpg, the portfolio card in the Builds menu
-tools/                        generator, data, stories, dev server, CDP driver      (not deployed)
+tools/                        generator, data, stories, claims ledger, checkers,
+                              dev server, CDP driver                                (not deployed)
 _stories.html _stories.js     story lab                                             (not deployed)
 _og.html                      source for the link-preview card                     (not deployed)
 ```
@@ -122,6 +123,81 @@ section of the stylesheet (its tag, the Builds menu, the eight rules, the 404
 index and the four Labs-only stories), and palette entries for builds in the
 script. If the portfolio's design moves on, copy those three files across, keep
 the Labs section of the stylesheet, and rebuild.
+
+## One page, not eight
+
+Labs stays a single launcher. Every build lives on the index, and there are no
+per-build pages on this domain.
+
+The case for per-build pages is that eight cards on one index is already a long
+page, and at twelve it would not work. The case against is that the pages would
+have nothing of their own to say. RideLens, Daylight, RailDrop and Gridiron
+already have full case studies on the portfolio, and a Labs page for each would
+either duplicate them or be a thinner version of them, which is worse for a
+reader than one good page and a link. For the four without a case study, a
+dedicated page would hold the same card contents at larger type.
+
+The count is not the constraint people assume. What makes a long index work is
+that each card is self-contained and scannable, which these are: a worked
+example, three counted figures, one rule. When a twelfth build arrives, the
+question to ask is whether the index still scans, not whether twelve is too
+many. If it does not, the first move is grouping, not a page per build.
+
+This also settles a question on the portfolio's side. Its `docs/PROPOSALS.md`
+argues for keeping the four case studies there and linking them from here, which
+only works if Labs does not grow case studies of its own. It does not.
+
+## Where the log is
+
+There is no `IMPROVEMENTS.md` here. Labs and the portfolio are improved in the
+same cycles, so both are recorded in the portfolio repository's
+`IMPROVEMENTS.md`, which has a Labs section in each entry that touches this
+site. This site's work in cycle 22 is under "Labs, in the same cycle".
+
+## Claims and checks
+
+Every figure on a build card comes from `tools/claims.py`, the claims ledger.
+Nothing on the page carries a number of its own: `tools/data.py` calls `M()` and
+`V()` for every one.
+
+```
+python3 tools/claims.py                     # the ledger as a table
+python3 tools/claims.py --json              # the same, as JSON
+python3 tools/verify_claims.py              # re-derive what runs in a second
+python3 tools/verify_claims.py --build      # also the ones that need a test run
+```
+
+The verifier does three things and keeps them apart: it checks that every claim
+is printed somewhere and that nothing printed is undeclared; it re-derives each
+figure by running a command in the product's repository and reports drift; and
+it names what it could not check rather than passing it. A figure that needs
+Excel, or a live pipeline, is reported as unchecked every single time.
+
+It resolves the product repositories as siblings of this one, or under
+`CLAIMS_REPO_ROOT`. A missing repository is a failure to check, not a pass.
+
+`tools/verify_claims.py` is byte-identical to the portfolio's copy, and both
+ledgers declare the same `LEDGER_FORMAT`. One verifier serves both sites.
+
+Each build's rule is a claim about a codebase, so the ledger carries the
+mechanism behind it as a supporting claim: `rule.gridiron` is the constant that
+renders "Ball spot unavailable", `rule.pricinghub` is the absence of a
+`vbaProject` in the workbook. If a rule ever loses its mechanism, the verifier
+says so.
+
+The build warns, and does not fail, on an asserted figure older than
+`STALE_AFTER_DAYS`. An old measurement is not a wrong one, and the build has no
+way to tell the difference.
+
+```
+python3 tools/check_external.py             # outbound links, short links, framing
+python3 tools/check_external.py --hops      # the eight short links, live
+python3 tools/check_external.py --selftest  # the framing rule, no network
+```
+
+`check_external.py` needs the network, so it is run by hand rather than by the
+build. It is byte-identical to the portfolio's copy. `SITE_ORIGIN` points the
+short-link check at this site: the default is the portfolio.
 
 ## Stories and bays
 

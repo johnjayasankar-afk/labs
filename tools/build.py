@@ -27,6 +27,7 @@ sys.path.insert(0, HERE)
 
 import data as D  # noqa: E402
 import stories  # noqa: E402
+import claims  # noqa: E402
 import labs_stories  # noqa: E402,F401  registers AgentFit, Cartonry, KeepFloor and Pricing Hub
 
 S = D.SITE
@@ -488,6 +489,11 @@ def showcase():
         ''.join(tabs), ''.join(panels))
 
 
+def lede_p(block):
+    """The one line under a section heading that says what the section means."""
+    return '<p class="shead__lede">%s</p>' % esc(block['lede']) if block.get('lede') else ''
+
+
 def home():
     actions = btn('See the builds', '#featured', 'primary', 'lg') + btn('Portfolio', S['portfolio'], 'ghost', 'lg')
     meta = ''.join('<li>%s</li>' % esc(x) for x in H['meta'])
@@ -508,7 +514,7 @@ def home():
                            stats=''.join(stat(v, k) for v, k in b['stats']), actions=acts, bay=bay('bay-' + b['slug'], b, 'compact')))
     featured = ('<section class="sect sect--feat" id="featured" data-locus data-label="Featured" aria-labelledby="featured-h">'
                 '<div class="wrap"><div class="shead shead--center" data-reveal>%s%s</div></div>%s</section>\n') % (
-        slabel(F['n'], F['kicker']), heading(F['h2'], 'featured-h'), ''.join(rows))
+        slabel(F['n'], F['kicker']), heading(F['h2'], 'featured-h') + lede_p(F), ''.join(rows))
 
     A = H['also']
     cards = []
@@ -523,7 +529,10 @@ def home():
     # the same dark band the portfolio gives Labs on its home page
     also = ('<section class="sect labsband" id="also" data-locus data-label="Also shipped" aria-labelledby="also-h"><div class="labsband__card" data-spot><div class="wrap">'
             '<div class="shead shead--center shead--dark" data-reveal>%s%s</div><div class="labgrid labgrid--2">%s</div></div></div></section>\n') % (
-        slabel(A['n'], A['kicker'], dark=True), heading(A['h2'], 'also-h'), ''.join(cards))
+        slabel(A['n'], A['kicker'], dark=True), heading(A['h2'], 'also-h') + lede_p(A), ''.join(cards))
+
+    prov = ('<section class="sect sect--tight" aria-label="Where these figures come from">'
+            '<div class="wrap"><p class="hint hint--prov">%s</p></div></section>\n') % esc(H['provenance'])
 
     R = H['rules']
     rules = ''.join('<li class="rule rule--sm" data-words="%s" data-reveal%s><p class="rule__k">%s · %s</p><p class="rule__h">%s</p><p class="rule__p">%s</p></li>'
@@ -540,7 +549,7 @@ def home():
              '<span class="visit__go btn btn--mint"><span>%s</span>%s</span>%s</a><div class="rows__foot">%s</div></div></section>\n') % (
         esc(S['portfolio']), esc(Vt['k']), esc(Vt['h2']), mval(Vt['lede']), esc(Vt['link']), EXTI, NEWTAB, hint(H['hint']))
 
-    body = hero + featured + also + shared + visit
+    body = hero + featured + also + prov + shared + visit
     ld = {'@context': 'https://schema.org', '@type': 'CollectionPage', 'name': S['title'], 'url': DOM + '/', 'description': S['description'],
           'inLanguage': 'en-US', 'dateModified': LASTMOD,
           'author': {'@type': 'Person', 'name': S['name'], 'url': S['portfolio']},
@@ -735,6 +744,12 @@ def main():
             print('ERROR', p)
         sys.exit(1)
     print('built %d files, %d builds, %d redirects, checks clean' % (len(written), len(BUILDS), len(ROUTES)))
+    # A figure nobody can still vouch for is a warning, never an error: an old
+    # measurement is not a wrong one, and the build cannot tell the difference.
+    # tools/verify_claims.py is where the checkable ones are actually checked.
+    for c in claims.stale_claims():
+        print('note: %s asserted %d days ago, over the %d-day mark (%s = %s)'
+              % (c.id, c.age_days(), claims.STALE_AFTER_DAYS, c.id, c.value))
 
 
 if __name__ == '__main__':
