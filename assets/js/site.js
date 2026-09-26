@@ -167,7 +167,7 @@
         /* on a phone the button waits for a scroll back up, so it never sits on the text being read */
         if (Math.abs(y - lastY) > 8) { goingUp = y < lastY; lastY = y; }
         totop.classList.toggle('is-on', y > window.innerHeight * 1.1 && (goingUp || window.innerWidth > 760));
-        if (totopRing) totopRing.style.strokeDashoffset = (100 - (max > 0 ? Math.min(1, y / max) : 0) * 100).toFixed(2);
+        if (totopRing && !CSS_SCROLL) totopRing.style.strokeDashoffset = (100 - (max > 0 ? Math.min(1, y / max) : 0) * 100).toFixed(2);
       }
       for (var i = 0; i < spies.length; i++) spies[i]();
     });

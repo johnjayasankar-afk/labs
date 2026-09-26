@@ -57,7 +57,7 @@
 
 /* ---- base ------------------------------------------------------------------ */
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; color-scheme: light; scroll-padding-top: 110px; scrollbar-color: rgba(28, 51, 38, .32) transparent; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; color-scheme: light; scroll-padding-top: 110px; scrollbar-color: rgba(28, 51, 38, .32) transparent; scrollbar-gutter: stable; }
 body {
   margin: 0; min-width: 320px; background-color: var(--ground); color: var(--ink);
   background-image: radial-gradient(circle at 1px 1px, rgba(28, 51, 38, .06) 1px, transparent 1.2px); background-size: 24px 24px;
@@ -75,6 +75,21 @@ ul, ol { padding: 0; list-style: none; }
 code { font-family: var(--mono); }
 /* running text never ends a paragraph on a lone word */
 p { text-wrap: pretty; }
+/* A deep link should land somewhere obvious. The scroll-padding above already
+   stops the target hiding under the header; this says which thing was asked
+   for, once, and then gets out of the way. Anchors are how a case study gets
+   shared: someone sends the beat, not the page. */
+:target { animation: landed 2.4s var(--ease) both; }
+@keyframes landed {
+  0%   { background-color: rgba(52, 211, 153, .16); }
+  70%  { background-color: rgba(52, 211, 153, .16); }
+  100% { background-color: transparent; }
+}
+@media (prefers-reduced-motion: reduce) { :target { animation: none; } }
+
+/* The caret in a search field belongs to the site, not to the browser. */
+input, textarea { caret-color: var(--forest-2); }
+
 ::selection { background: rgba(110, 231, 183, .5); color: var(--ink); }
 :focus-visible { outline: 2px solid var(--forest-2); outline-offset: 3px; border-radius: 8px; }
 .seg__btn:focus-visible, .beatbar__nav a:focus-visible { outline-offset: -3px; }
@@ -1685,6 +1700,21 @@ html.keys-on .hint[data-kbd], .phead--nf .hint[data-kbd] { display: block; }
 /* the back-to-top button fills its ring as the page is read */
 .totop__ring { position: absolute; inset: -1px; width: calc(100% + 2px); height: calc(100% + 2px); transform: rotate(-90deg); pointer-events: none; }
 .totop__ring circle { fill: none; stroke: var(--mint-3); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset .15s linear; }
+
+/* The ring around the back-to-top button is the same scroll progress the bar at
+   the top of the page shows, drawn round a circle. Same trade as that bar: where
+   the browser can run an animation against the scroll position itself it does,
+   and the script stops writing stroke-dashoffset on every frame. The transition
+   goes with it, because a scroll-driven animation is already continuous and a
+   150ms ease on top of it only adds lag. */
+@supports (animation-timeline: scroll()) {
+  .totop__ring circle {
+    transition: none;
+    animation: totop-ring linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+@keyframes totop-ring { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
 
 /* once, as the hero settles, a band of light runs along its quieter line */
 .hero__line.tone { position: relative; }
