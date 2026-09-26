@@ -7,7 +7,7 @@ harnesses.
   python3 serve.py <site-root> <port> [sink-dir]
 
 Without a sink dir, POST answers 405, which is how the final server runs."""
-import http.server, json, os, re, sys, base64, urllib.parse
+import http.server, json, os, re, sys, base64, gzip, urllib.parse
 
 ROOT = os.path.abspath(sys.argv[1])
 PORT = int(sys.argv[2])
@@ -84,10 +84,21 @@ class H(http.server.BaseHTTPRequestHandler):
         if not full or not os.path.isfile(full):
             self.send_response(404); self.end_headers(); return
         body = open(full, 'rb').read()
-        self.send_response(code)
         ext = os.path.splitext(full)[1].lower()
+        # Vercel compresses every text response, so a dev server that does not
+        # makes the stylesheet look four times heavier than it is, and any local
+        # measurement of first paint pessimistic in the one place it matters.
+        encoding = None
+        if (ext in ('.html', '.css', '.js', '.json', '.svg', '.xml', '.txt', '.webmanifest')
+                and 'gzip' in self.headers.get('Accept-Encoding', '') and len(body) > 1024):
+            body = gzip.compress(body, 9)
+            encoding = 'gzip'
+        self.send_response(code)
         self.send_header('Content-Type', TYPES.get(ext, 'application/octet-stream'))
         self.send_header('Content-Length', str(len(body)))
+        if encoding:
+            self.send_header('Content-Encoding', encoding)
+            self.send_header('Vary', 'Accept-Encoding')
         self.send_header('Cache-Control', 'no-store')
         for rx, hs in load_rules():   # re-read so a vercel.json edit applies without a restart
             if rx.match(path):
