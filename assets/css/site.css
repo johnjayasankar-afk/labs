@@ -182,6 +182,20 @@ html.keys-on .hint[data-kbd], .phead--nf .hint[data-kbd] { display: block; }
 .continue__l { overflow: hidden; text-overflow: ellipsis; }
 .continue__w { color: var(--ink-3); }
 
+/* The scroll progress bar, driven by the scroll itself where the browser can.
+   Same trade as the hero drift above: off the main thread, and the script stops
+   writing a transform on every frame. The JS path stays for browsers without
+   scroll-driven animations, and unlike the hero this one is not gated on
+   reduced motion: it is a position indicator, not motion for its own sake, and
+   a progress bar that refuses to show progress is just wrong. */
+@supports (animation-timeline: scroll()) {
+  .progress > i {
+    animation: scroll-progress linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+@keyframes scroll-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
 .progress { position: fixed; top: 0; left: 0; right: 0; z-index: 70; height: 2px; pointer-events: none; filter: drop-shadow(0 0 6px rgba(52, 211, 153, .5)); }
 .progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--mint-3), var(--forest-2)); transform: scaleX(0); transform-origin: 0 50%; }
 
@@ -271,6 +285,41 @@ html.keys-on .hint[data-kbd], .phead--nf .hint[data-kbd] { display: block; }
 
 /* ---- hero -------------------------------------------------------------------- */
 .hero { position: relative; isolation: isolate; overflow-x: clip; padding-top: clamp(36px, 5.5vw, 76px); }
+/* The hero's light and its stage drift slower than the page, which reads as
+   depth. Where the browser can run an animation against the scroll position
+   itself, it does, and the whole effect moves to the compositor: no scroll
+   listener, no per-frame custom-property write, and no style recalculation of
+   the 3300 elements .hero contains. The script checks the same feature and
+   stands down when this is in charge, so the two never both drive it.
+
+   Gated on reduced motion explicitly. The blanket rule near the end of this
+   file clamps animation-duration, which a scroll-driven animation does not
+   have: its timeline is the scroll, not the clock, so that rule would not
+   have stopped it.
+
+   Measured with tools/scroll-perf.mjs, nine interleaved rounds at 2x CPU
+   throttle: style recalculation 933ms to 814ms and frames over 33ms during a
+   full-page scroll 70 to 52, neither range overlapping. An earlier attempt at
+   the same saving declared --pz with `inherits: false`, which stopped the write
+   reaching the subtree and also stopped it reaching these two pseudo-elements,
+   the only things that read it. The parallax quietly died and the numbers
+   improved, which is why this one was checked by reading the transform. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    .hero::before {
+      animation: hero-drift linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 900px;
+    }
+    .hero__stage::before {
+      animation: hero-stage-drift linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 900px;
+    }
+  }
+}
+@keyframes hero-drift { from { transform: translate(-50%, 0); } to { transform: translate(-50%, 34px); } }
+@keyframes hero-stage-drift { from { transform: translateY(0); } to { transform: translateY(-16px); } }
 .hero::before { content: ""; position: absolute; z-index: -1; left: 50%; top: -220px; width: min(1200px, 100%); height: 880px; transform: translate(-50%, var(--pz, 0px)); pointer-events: none; background: radial-gradient(closest-side, rgba(110, 231, 183, .24), rgba(110, 231, 183, 0) 72%); }
 .hero__in { display: flex; flex-direction: column; align-items: center; text-align: center; }
 .hero__badge { animation: rise .8s var(--ease) both; }

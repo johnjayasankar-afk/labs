@@ -128,7 +128,11 @@
   var scrollFill = $('[data-scrollbar]'), totop = $('[data-totop]'), totopRing = totop ? $('.totop__ring circle', totop) : null;
   var menuBtn = $('[data-menu]'), drawer = $('[data-drawer]');
   /* the hero's light and its dark stage drift slower than the page, which reads as depth */
-  var depth = REDUCED ? null : $('.hero');
+  /* where CSS can drive the hero's drift off the scroll position itself it
+     does, on the compositor, and this stands down rather than writing the same
+     custom property on every frame. See the @supports block in site.css. */
+  var CSS_SCROLL = !!(window.CSS && CSS.supports && CSS.supports('animation-timeline', 'scroll()'));
+  var depth = (REDUCED || CSS_SCROLL) ? null : $('.hero');
 
   /* how much of the top of the viewport the fixed chrome covers */
   function headerOffset() {
@@ -157,7 +161,7 @@
       scrollQueued = false;
       var y = window.scrollY || 0, max = root.scrollHeight - window.innerHeight;
       if (hdr) hdr.classList.toggle('is-float', y > 24);
-      if (scrollFill) scrollFill.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0).toFixed(4) + ')';
+      if (scrollFill && !CSS_SCROLL) scrollFill.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0).toFixed(4) + ')';
       if (depth) { var p = Math.min(1, y / 900); depth.style.setProperty('--pz', (p * 34).toFixed(1) + 'px'); depth.style.setProperty('--pz2', (p * -16).toFixed(1) + 'px'); }
       if (totop) {
         /* on a phone the button waits for a scroll back up, so it never sits on the text being read */
