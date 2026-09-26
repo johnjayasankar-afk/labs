@@ -271,20 +271,6 @@ html.keys-on .hint[data-kbd], .phead--nf .hint[data-kbd] { display: block; }
 
 /* ---- hero -------------------------------------------------------------------- */
 .hero { position: relative; isolation: isolate; overflow-x: clip; padding-top: clamp(36px, 5.5vw, 76px); }
-/* --pz and --pz2 move the hero's light and its stage on every scroll frame.
-   Declared so they do not inherit: an inheriting custom property invalidates
-   style for the whole subtree it is set on, and .hero holds the schematic and
-   most of the page's 3300 elements. Non-inheriting, the write reaches .hero and
-   its two pseudo-elements and stops there.
-
-   Measured with tools/scroll-perf.mjs, seven interleaved rounds at 2x CPU
-   throttle: style recalculation 928ms to 794ms, and frames over 33ms during a
-   full-page scroll 75 to 55. The ranges do not overlap. Four other candidates
-   were measured and thrown away: batching the spies' rect reads, guarding the
-   class writes, pausing every animation, and removing backdrop-filter. None of
-   them moved a frame. */
-@property --pz { syntax: "<length>"; inherits: false; initial-value: 0px; }
-@property --pz2 { syntax: "<length>"; inherits: false; initial-value: 0px; }
 .hero::before { content: ""; position: absolute; z-index: -1; left: 50%; top: -220px; width: min(1200px, 100%); height: 880px; transform: translate(-50%, var(--pz, 0px)); pointer-events: none; background: radial-gradient(closest-side, rgba(110, 231, 183, .24), rgba(110, 231, 183, 0) 72%); }
 .hero__in { display: flex; flex-direction: column; align-items: center; text-align: center; }
 .hero__badge { animation: rise .8s var(--ease) both; }
