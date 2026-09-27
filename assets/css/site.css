@@ -443,8 +443,14 @@ html.keys-on .hint[data-kbd], .phead--nf .hint[data-kbd] { display: block; }
 .s-skel { display: block; flex: none; width: var(--w, 4em); max-width: 100%; height: .52em; border-radius: .3em; background: var(--s-skel); }
 .s-skel--ink { background: #d8ddd9; }
 .s-skel--sky { background: #c6daf1; }
-.s-busy { background: linear-gradient(90deg, var(--s-skel) 30%, #f9f7f3 50%, var(--s-skel) 70%) 0 0 / 300% 100%; animation: s-shimmer 1.7s linear infinite; }
-@keyframes s-shimmer { from { background-position: 100% 0; } to { background-position: -50% 0; } }
+/* The shimmer sweeps a pseudo-element across rather than sliding a background.
+   background-position repaints the element on every frame and there are eleven
+   of these running for as long as the page is open; transform is composited and
+   costs this thread nothing. The base colour is left alone so the --ink and
+   --sky skeleton variants keep theirs. */
+.s-busy { position: relative; overflow: hidden; }
+.s-busy::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 20%, #f9f7f3 50%, transparent 80%); transform: translateX(-100%); animation: s-shimmer 1.7s linear infinite; will-change: transform; }
+@keyframes s-shimmer { to { transform: translateX(100%); } }
 .s-swap--st { justify-items: end; }
 .s-st { display: grid; place-items: center; width: 1.45em; height: 1.45em; border-radius: 50%; }
 .s-st .s-ico { width: .95em; height: .95em; }
@@ -466,7 +472,10 @@ html.keys-on .hint[data-kbd], .phead--nf .hint[data-kbd] { display: block; }
 .s-fill--soft { background: #c3cbc6; }
 .s-fill--mint { background: var(--mint-3); }
 .story--setup-agent[data-step="1"] .s-fill, .story--incident-agent[data-step="1"] .s-fill, .story--margin-simulator[data-step="2"] .s-cmp .s-fill {
-  background: linear-gradient(90deg, #b9c4bd 30%, #e5ebe7 50%, #b9c4bd 70%) 0 0 / 300% 100%; animation: s-shimmer 1.7s linear infinite;
+  position: absolute; overflow: hidden; background: #b9c4bd;
+}
+.story--setup-agent[data-step="1"] .s-fill::after, .story--incident-agent[data-step="1"] .s-fill::after, .story--margin-simulator[data-step="2"] .s-cmp .s-fill::after {
+  content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 20%, #e5ebe7 50%, transparent 80%); transform: translateX(-100%); animation: s-shimmer 1.7s linear infinite; will-change: transform;
 }
 .story--setup-agent[data-step="2"] .s-fill, .story--incident-agent[data-step="2"] .s-fill { background: var(--mint-3); }
 .s-val { font-weight: 500; font-size: .92em; letter-spacing: -.02em; white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -862,9 +871,13 @@ html.keys-on .hint[data-kbd], .phead--nf .hint[data-kbd] { display: block; }
 .gr-slate__head { display: flex; align-items: center; justify-content: space-between; gap: 1em; padding: 0 0 .75em; }
 .gr-live { display: inline-flex; align-items: center; gap: .5em; font: 500 .66em/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
 .gr-live b { margin-left: .1em; font: 400 2.5em/1 var(--sans); letter-spacing: -.05em; color: var(--ink); }
-.gr-dot { display: block; flex: none; width: .55em; height: .55em; border-radius: 50%; background: var(--mint-3); box-shadow: 0 0 0 .2em rgba(52, 211, 153, .2); animation: gr-live 2.2s ease-in-out infinite; }
+/* The pulse rides a pseudo-element on scale and opacity. Growing a box-shadow
+   restyles and repaints the dot every frame; the halo it leaves behind is the
+   same shape and the compositor draws it alone. */
+.gr-dot { position: relative; display: block; flex: none; width: .55em; height: .55em; border-radius: 50%; background: var(--mint-3); box-shadow: 0 0 0 .2em rgba(52, 211, 153, .2); }
+.gr-dot::after { content: ''; position: absolute; inset: -.16em; border-radius: 50%; background: rgba(52, 211, 153, .24); animation: gr-live 2.2s ease-in-out infinite; will-change: transform, opacity; }
 .s-chip .gr-dot { width: .6em; height: .6em; margin-left: -.1em; }
-@keyframes gr-live { 0%, 100% { box-shadow: 0 0 0 .16em rgba(52, 211, 153, .24); } 50% { box-shadow: 0 0 0 .42em rgba(52, 211, 153, 0); } }
+@keyframes gr-live { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(2.1); opacity: 0; } }
 .gr-games { display: grid; gap: .2em; }
 .gr-g { position: relative; display: grid; grid-template-columns: 4.6em minmax(0, 1fr) auto auto; align-items: center; gap: .75em; min-height: 2.65em; margin: 0 -.5em; padding: .3em .5em; border-radius: .7em; }
 .gr-g__clock { display: grid; place-items: center; height: 2.15em; border-radius: .5em; font: 500 .72em/1 var(--mono); letter-spacing: .02em; white-space: nowrap; color: var(--ink); background: var(--s-soft); }

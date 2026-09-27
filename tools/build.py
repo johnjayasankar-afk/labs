@@ -217,6 +217,7 @@ HEAD = """<!doctype html>
 <noscript><style>.hdr__bar { background: rgba(248, 246, 241, .94); }</style></noscript>
 <link rel="preload" href="/assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-500.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/css/site.css?v={{v}}">
 {{ld}}</head>
 """
