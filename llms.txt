@@ -19,5 +19,7 @@ the live product; the case studies live on the portfolio.
 ## Elsewhere
 
 - [Portfolio](https://johnjayasankar.com/): the case studies, and the work done inside a company.
+- [Evidence](https://labs.johnjayasankar.com/evidence): every figure on this site with its source, its method,
+  and the date it was last confirmed.
 - [Disclaimer](https://labs.johnjayasankar.com/legal): whose views these are.
 - Contact: johnjayasankar@gmail.com

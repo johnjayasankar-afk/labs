@@ -67,6 +67,50 @@
     $$('kbd').forEach(function (el) { if (el.textContent === '⌘K') el.textContent = 'Ctrl K'; });
   }
 
+  /* ---- theme ---------------------------------------------------------------
+     The page starts in whatever the system asked for; pressing the control is
+     a choice, and a choice is remembered and beats the system from then on.
+     The inline script in <head> has already applied a stored choice before
+     the first paint, so there is nothing to correct here on load.
+
+     The button shows the theme you would get by pressing it, which is the one
+     you are not in. Both faces are in the markup and CSS hides one, so it is
+     legible with no script at all; only the label and the browser chrome need
+     writing. */
+  var themeBtn = $('[data-theme-toggle]');
+  var darkMQ = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+  function themeNow() {
+    var set = document.documentElement.getAttribute('data-theme');
+    if (set === 'dark' || set === 'light') return set;
+    return darkMQ && darkMQ.matches ? 'dark' : 'light';
+  }
+
+  function paintTheme() {
+    var now = themeNow();
+    if (themeBtn) themeBtn.setAttribute('aria-label',
+      now === 'dark' ? 'Switch to the light theme' : 'Switch to the dark theme');
+    /* The browser's own chrome, so the notch and the tab strip match the page.
+       Two metas ship, each scoped to a colour scheme, which is right for a
+       reader who has made no choice and has no script. Once there is a choice
+       the media queries are the wrong answer, so both are set to it. */
+    $$('meta[name="theme-color"]').forEach(function (m) {
+      m.setAttribute('content', now === 'dark' ? '#080f0c' : '#f8f6f1');
+    });
+  }
+
+  if (themeBtn) {
+    themeBtn.addEventListener('click', function () {
+      var next = themeNow() === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('jj-theme', next); } catch (e) { /* private window */ }
+      paintTheme();
+    });
+  }
+  /* the system changing under a page that has no stored choice of its own */
+  if (darkMQ && darkMQ.addEventListener) darkMQ.addEventListener('change', paintTheme);
+  paintTheme();
+
   /* ---- toast and clipboard ---------------------------------------------- */
   var toastEl = $('[data-toast]'), toastTimer = 0;
   function toast(msg) {
@@ -369,7 +413,7 @@
   /* ---- reveal: blocks rise into place the first time they arrive ------------ */
   (function cascade() {
     /* a grid arrives one card after another, left to right */
-    $$('.fgrid, .lrows, .ncards, .labgrid, .inst__grid, .labindex, .tenets, .earlier__list').forEach(function (grid) {
+    $$('.fgrid, .lrows, .ncards, .labgrid, .inst__grid, .labindex, .tenets, .earlier__list, .evlist').forEach(function (grid) {
       $$('[data-reveal]', grid).forEach(function (el, i) { if (!el.style.getPropertyValue('--rd')) el.style.setProperty('--rd', Math.min(i, 5)); });
     });
   })();

@@ -179,10 +179,11 @@ BUILDS_CLAIMS = [
 
     # --- 03 RailDrop ----------------------------------------------------
     C(id='raildrop.window', value='±1 day', about='default watch window',
-      origin='repo', source='RailDrop3', check='here', verified='2026-09-25',
+      origin='repo', source='RailDrop3', check='here', verified='2026-10-01',
       expect='1',
-      method='the day count marked recommended in the window selector, '
-             'src/components/new-watch-form.tsx'),
+      method='the flexibility the form falls back to when a link carries none: '
+             'the default in useState<0 | 1 | 2>(initial?.flexibilityDays ?? 1), '
+             'src/components/fare-lookup.tsx'),
     C(id='raildrop.email', value='1 email', about='only when it improves',
       origin='document', source='README.md', source_repo='RailDrop3',
       check='elsewhere', verified='2026-09-25',
@@ -385,8 +386,8 @@ DERIVE = {
         "Sources/DaylightCore/Device.swift",
 
     'raildrop.window':
-        "sed -n 's/.*\\[\\([0-9]*\\), \"\u00b11 day \u00b7 recommended\"\\].*/\\1/p' "
-        "src/components/new-watch-form.tsx | head -1",
+        "sed -n 's/.*useState<0 | 1 | 2>(initial?.flexibilityDays ?? \\([0-9]*\\)).*/\\1/p' "
+        "src/components/fare-lookup.tsx | head -1",
     'raildrop.prices':
         "grep -c '\"UNKNOWN\"' src/lib/domain/types.ts",
     'rule.raildrop':
